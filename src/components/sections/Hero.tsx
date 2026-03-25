@@ -1,35 +1,80 @@
-import { Button } from '@/components/ui/button';
+'use client';
 
-export const Hero = () => {
+import { Button } from '@/components/ui/button';
+import Image from 'next/image';
+import Link from 'next/link';
+
+interface HeroProps {
+  initialData?: any;
+}
+
+export const Hero = ({ initialData }: HeroProps) => {
+  const content = initialData;
+  
+  // Support dual titles: Use | separator if present, otherwise bold the last word automatically
+  const titleText = content?.title || 'MODERN | ELEGANCE';
+  let titlePart1 = '';
+  let titlePart2 = '';
+  
+  if (titleText.includes('|')) {
+    [titlePart1, titlePart2] = titleText.split('|').map((s: string) => s.trim());
+  } else {
+    const words = titleText.split(' ');
+    if (words.length > 1) {
+      titlePart2 = words.pop() || '';
+      titlePart1 = words.join(' ');
+    } else {
+      titlePart1 = titleText;
+    }
+  }
+
   return (
-    <section className="relative h-[80vh] md:h-[90vh] w-full flex items-center justify-center overflow-hidden">
-      {/* Background Image Overlay */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ 
-          backgroundImage: `url('https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop')`,
-          filter: 'brightness(0.7)'
-        }}
-      />
+    <section className="relative h-[85vh] md:h-screen w-full flex items-end overflow-hidden">
+      {/* Background Image Container */}
+      <div className="absolute inset-0">
+        <Image 
+          src={content?.image_url || 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1974&auto=format&fit=crop'}
+          alt="Hero Background"
+          fill
+          priority
+          className="object-cover brightness-[0.75] select-none"
+          sizes="100vw"
+          quality={100}
+        />
+        {/* Subtle Gradient Overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+      </div>
       
-      {/* Content */}
-      <div className="relative z-10 text-center text-white px-4 max-w-4xl">
-        <p className="text-[10px] md:text-sm font-semibold tracking-[0.3em] uppercase mb-4 opacity-90">
-          WINTER 2024 COLLECTION
-        </p>
-        <h1 className="text-4xl md:text-7xl font-heading font-bold tracking-tight mb-6 leading-[1.1]">
-          THE ART OF <br /> MODERN ELEGANCE
-        </h1>
-        <p className="text-sm md:text-lg text-gray-200 mb-10 max-w-2xl mx-auto leading-relaxed">
-          Redefining luxury through minimalist design and sustainably sourced premium fabrics.
-        </p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Button className="bg-[#D97706] hover:bg-[#B45309] text-white px-8 py-6 rounded-full text-xs font-bold tracking-widest min-w-[200px] transition-all">
-            SHOP COLLECTION
-          </Button>
-          <Button variant="outline" className="bg-white/10 border-white/20 hover:bg-white/20 text-white px-8 py-6 rounded-full text-xs font-bold tracking-widest min-w-[200px] backdrop-blur-sm transition-all">
-            VIEW LOOKBOOK
-          </Button>
+      {/* Content Area */}
+      <div className="relative z-10 w-full px-6 md:px-20 pb-24 md:pb-32 animate-in fade-in slide-in-from-bottom-12 duration-1000">
+        <div className="max-w-4xl space-y-10">
+          <p className="text-[10px] md:text-[11px] font-bold tracking-[0.5em] uppercase text-white/90">
+            {content?.subtitle || 'WINTER COLLECTION 2024'}
+          </p>
+          
+          <div className="flex flex-col space-y-0">
+            <h1 className="text-5xl md:text-9xl font-thin tracking-tight leading-none text-white uppercase drop-shadow-sm opacity-95">
+              {titlePart1}
+            </h1>
+            {titlePart2 && (
+              <h1 className="text-5xl md:text-9xl font-bold tracking-tighter leading-[0.85] text-white uppercase drop-shadow-md">
+                {titlePart2}
+              </h1>
+            )}
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4 pt-6">
+            <Link href={content?.cta_link || '/all'}>
+              <button className="bg-white text-black px-12 py-5 text-[10px] font-bold uppercase tracking-[0.2em] min-w-[180px] hover:bg-gray-200 transition-all active:scale-95 rounded-none">
+                {content?.cta_text || 'SHOP NOW'}
+              </button>
+            </Link>
+            <Link href="/lookbook">
+              <button className="bg-transparent border border-white/40 text-white px-12 py-5 text-[10px] font-bold uppercase tracking-[0.2em] min-w-[180px] hover:bg-white hover:text-black hover:border-white transition-all active:scale-95 rounded-none">
+                {content?.cta_secondary_text || 'LOOKBOOK'}
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
     </section>

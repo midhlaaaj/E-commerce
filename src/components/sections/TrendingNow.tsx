@@ -1,37 +1,72 @@
-const trendingProducts = [
-  { id: 1, name: 'WOOL BLEND OVERCOAT', type: 'Camel / Oversized Fit', price: '$334.50', image: 'https://images.unsplash.com/photo-1539533018447-63fcce267bc0?q=80&w=1974&auto=format&fit=crop', badge: 'NEW' },
-  { id: 2, name: 'ESSENTIAL LINEN SHIRT', type: 'Pure Linen White', price: '$84.50', image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=1976&auto=format&fit=crop' },
-  { id: 3, name: 'RAW DENIM SLIM JEANS', type: 'Indigo / Wash', price: '$122.34', image: 'https://images.unsplash.com/photo-1542272604-749e75c750e3?q=80&w=1934&auto=format&fit=crop' },
-  { id: 4, name: 'CASHMERE CREWNECK', type: 'Charcoal / Italian Wool', price: '$162.45', image: 'https://images.unsplash.com/photo-1614676471928-2ed0ad1061a4?q=80&w=1974&auto=format&fit=crop', badge: 'LIMITED' },
-];
+'use client';
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { Loader2, Plus } from 'lucide-react';
 
 export const TrendingNow = () => {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTrending() {
+      const { data } = await supabase
+        .from('products')
+        .select('*')
+        .eq('is_featured', true)
+        .limit(4);
+      
+      if (data) {
+        setProducts(data);
+      }
+      setLoading(false);
+    }
+    fetchTrending();
+  }, []);
+
+  if (loading) return (
+    <div className="py-20 flex flex-col items-center justify-center gap-4">
+      <Loader2 className="animate-spin text-[#D97706]" size={32} />
+      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">Loading Trending Pieces...</span>
+    </div>
+  );
+
   return (
     <section className="py-20 px-6 max-w-7xl mx-auto text-center">
-      <h2 className="text-3xl font-heading font-bold tracking-tight mb-4 uppercase">TRENDING NOW</h2>
-      <div className="w-16 h-1 bg-[#D97706] mx-auto mb-6" />
-      <p className="text-sm text-gray-500 mb-16 max-w-2xl mx-auto">
-        Influent this week's most loved pieces curated for the modern minimalist lifestyle.
+      <h2 className="text-3xl font-heading font-bold tracking-tight mb-4 uppercase italic">TRENDING NOW</h2>
+      <div className="w-16 h-[2px] bg-[#D97706] mx-auto mb-6" />
+      <p className="text-sm text-gray-400 mb-16 max-w-2xl mx-auto font-medium uppercase tracking-widest">
+        Curated this week's most loved pieces for the modern minimalist lifestyle.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-left">
-        {trendingProducts.map((product) => (
+        {products.map((product) => (
           <div key={product.id} className="group cursor-pointer">
-            <div className="aspect-[3/4] overflow-hidden rounded-xl bg-gray-100 mb-6 relative">
-              {product.badge && (
-                <span className="absolute top-4 left-4 z-10 bg-black text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter">
-                  {product.badge}
+            <div className="aspect-[3/4] overflow-hidden rounded-2xl bg-gray-50 mb-6 relative shadow-sm group-hover:shadow-xl transition-all duration-500">
+              {product.is_featured && (
+                <span className="absolute top-4 left-4 z-10 bg-black text-white text-[8px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
+                  FEATURED
+                </span>
+              )}
+              {product.is_sale && (
+                <span className="absolute top-4 right-4 z-10 bg-[#D97706] text-white text-[8px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
+                  SALE
                 </span>
               )}
               <img 
-                src={product.image} 
+                src={product.images?.[0]} 
                 alt={product.name}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500" />
             </div>
-            <h3 className="text-xs font-bold tracking-wider mb-1 uppercase">{product.name}</h3>
-            <p className="text-[10px] text-gray-500 mb-2 uppercase">{product.type}</p>
-            <p className="text-sm font-bold text-[#D97706]">{product.price}</p>
+            <h3 className="text-xs font-bold tracking-[0.2em] mb-2 uppercase group-hover:text-[#D97706] transition-colors">{product.name}</h3>
+            <div className="flex items-center gap-3">
+               <p className="text-sm font-bold text-gray-900 font-heading tracking-tighter">₹{product.price}</p>
+               {product.offer_price && (
+                 <p className="text-xs font-bold text-gray-400 line-through tracking-tighter">₹{product.offer_price}</p>
+               )}
+            </div>
           </div>
         ))}
       </div>

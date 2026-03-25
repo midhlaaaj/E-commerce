@@ -1,46 +1,71 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
-const categories = [
-  {
-    title: 'MEN',
-    subtitle: 'Active Clothing',
-    image: 'https://images.unsplash.com/photo-1516259762381-22954d7d3ad2?q=80&w=2066&auto=format&fit=crop',
-  },
-  {
-    title: 'WOMEN',
-    subtitle: 'Chic Elegance',
-    image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    title: 'KIDS',
-    subtitle: 'Playful Comfort',
-    image: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?q=80&w=1924&auto=format&fit=crop',
-  },
-];
+import { SectionHeader } from '@/components/layout/SectionHeader';
 
-export const Categories = () => {
+interface HomepageContent {
+  id: string;
+  section_key: string;
+  title: string;
+  subtitle: string;
+  image_url: string;
+  cta_text: string;
+  cta_link: string;
+}
+
+interface CategoriesProps {
+  initialData?: HomepageContent[];
+}
+
+// Order of appearance: Men, Women, Kids
+const ORDER = ['gender_men', 'gender_women', 'gender_kids'];
+
+export const Categories = ({ initialData = [] }: CategoriesProps) => {
+  const [cards] = useState(initialData);
+
+  if (cards.length === 0) return null;
+
+  // Sort them to match the target layout
+  const sortedCards = [...cards].sort((a, b) => ORDER.indexOf(a.section_key) - ORDER.indexOf(b.section_key));
+
   return (
-    <section className="py-20 px-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-12">
-        <h2 className="text-2xl font-heading font-bold tracking-tight">SHOP BY CATEGORY</h2>
-        <Link href="/all" className="text-xs font-bold text-[#D97706] underline underline-offset-4 tracking-widest">
-          VIEW ALL
-        </Link>
-      </div>
+    <section className="py-12 px-6 max-w-7xl mx-auto">
+      <SectionHeader 
+        title1="SHOP BY" 
+        title2="GENDER" 
+        subtitle="CURATED COLLECTIONS" 
+        ctaText="EXPLORE ALL" 
+        ctaLink="/shop"
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {categories.map((category) => (
-          <div key={category.title} className="group relative aspect-[4/5] overflow-hidden rounded-2xl cursor-pointer">
-            <div 
-              className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-              style={{ backgroundImage: `url(${category.image})` }}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {sortedCards.map((card) => (
+          <Link 
+            key={card.id || card.section_key} 
+            href={card.cta_link || '#'}
+            className="group relative aspect-[4/5] md:aspect-[3/4] overflow-hidden cursor-pointer bg-gray-100"
+          >
+            <Image 
+              src={card.image_url || '/placeholder.jpg'}
+              alt={card.title || 'Category'}
+              fill
+              className="object-cover transition-transform duration-1000 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, 33vw"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="absolute bottom-6 left-6 text-white">
-              <h3 className="text-xl font-heading font-bold">{category.title}</h3>
-              <p className="text-xs opacity-80">{category.subtitle}</p>
+            
+            {/* Subtle bottom gradient for readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-80 transition-opacity" />
+            
+            <div className="absolute bottom-10 left-10 text-white">
+              <h3 className="text-3xl font-extrabold tracking-tighter uppercase mb-1">
+                {card.title}
+              </h3>
+              <div className="w-8 h-[2px] bg-white opacity-60" />
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </section>

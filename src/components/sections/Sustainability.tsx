@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 
 export const Sustainability = () => {
   return (
-    <section className="py-24 px-6 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-16">
+    <section className="py-12 px-6 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-16">
       {/* Image Side */}
       <div className="flex-1 w-full relative">
         <div className="aspect-square bg-gray-200 rounded-3xl overflow-hidden shadow-2xl">

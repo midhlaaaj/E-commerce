@@ -1,21 +1,18 @@
 import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
-import QueryProvider from "@/components/providers/QueryProvider";
+import { cn } from "@/lib/utils";
+import { AuthProvider } from "@/hooks/useAuth";
 
-const inter = Inter({
-  variable: "--font-inter",
+const roboto = Roboto({
+  weight: ['100', '300', '400', '500', '700', '900'],
   subsets: ["latin"],
-});
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
+  variable: "--font-roboto",
 });
 
 export const metadata: Metadata = {
-  title: "EliteWear | Modern Elegance",
-  description: "Premium clothing for the modern minimalist.",
+  title: "ELITEWEAR | Modern Elegance",
+  description: "Luxury minimalist fashion for the modern era.",
 };
 
 export default function RootLayout({
@@ -24,13 +21,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${inter.variable} ${outfit.variable} antialiased`}
-      >
-        <QueryProvider>
+    <html lang="en" className="scroll-smooth">
+      <body className={cn(
+        "min-h-screen bg-background font-sans antialiased selection:bg-[#D97706] selection:text-white",
+        roboto.variable
+      )}>
+        <AuthProvider>
           {children}
-        </QueryProvider>
+        </AuthProvider>
       </body>
     </html>
   );

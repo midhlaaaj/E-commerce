@@ -7,12 +7,12 @@ export const Footer = () => {
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">
         {/* Brand & Social */}
         <div className="space-y-6">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-black flex items-center justify-center rounded-sm">
+          <Link href="/" className="flex items-center gap-2 group cursor-pointer w-fit">
+            <div className="w-8 h-8 bg-black flex items-center justify-center rounded-sm group-hover:bg-gray-800 transition-colors">
               <span className="text-white font-bold text-xl italic">E</span>
             </div>
-            <span className="font-heading font-bold text-xl tracking-tighter">ELITEWEAR</span>
-          </div>
+            <span className="font-heading font-bold text-xl tracking-tighter group-hover:text-gray-600 transition-colors">ELITEWEAR</span>
+          </Link>
           <p className="text-xs text-gray-500 max-w-[240px] leading-relaxed">
             Premium clothing brand designed for minimalist aesthetics, quality and sustainable fashion selection for the modern minimalist.
           </p>

@@ -1,26 +1,74 @@
-export const WomenHero = () => {
+'use client';
+
+import Image from 'next/image';
+import Link from 'next/link';
+
+interface WomenHeroProps {
+  initialData?: any;
+}
+
+export const WomenHero = ({ initialData }: WomenHeroProps) => {
+  const content = initialData;
+  
+  // Support dual titles: Use | separator if present, otherwise bold the last word automatically
+  const titleText = content?.title || "WOMEN'S | SELECTION";
+  let titlePart1 = '';
+  let titlePart2 = '';
+  
+  if (titleText.includes('|')) {
+    [titlePart1, titlePart2] = titleText.split('|').map((s: string) => s.trim());
+  } else {
+    const words = titleText.split(' ');
+    if (words.length > 1) {
+      titlePart2 = words.pop() || '';
+      titlePart1 = words.join(' ');
+    } else {
+      titlePart1 = titleText;
+    }
+  }
+
   return (
-    <section className="relative h-[90vh] w-full overflow-hidden bg-[#FDF2F0]">
-      <img 
-        src="/assets/women_hero.png" 
-        alt="Women's Essentials"
-        className="absolute inset-0 w-full h-full object-cover object-top"
-      />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent" />
+    <section className="relative h-[85vh] md:h-screen w-full flex items-end overflow-hidden">
+      {/* Background Image Container */}
+      <div className="absolute inset-0">
+        <Image 
+          src={content?.image_url || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1920&auto=format&fit=crop"} 
+          alt={content?.title || "Women's Selection"}
+          fill
+          priority
+          className="object-cover object-top brightness-[0.8]"
+          sizes="100vw"
+        />
+        {/* Gradient Overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+      </div>
       
-      <div className="relative h-full max-w-7xl mx-auto px-6 flex flex-col justify-center items-start">
-        <span className="text-xs font-bold tracking-[0.3em] uppercase mb-4 text-[#D97706] animate-fade-in">
-          THE SPRING 2024
-        </span>
-        <h1 className="text-6xl md:text-8xl font-heading font-bold tracking-tighter mb-8 max-w-2xl leading-[0.9] text-gray-900 animate-slide-up">
-          WOMEN'S<br />ESSENTIALS
-        </h1>
-        <p className="text-sm text-gray-600 max-w-md mb-8 leading-relaxed font-medium">
-          A curated collection of timeless silhouettes, crafted from the finest materials for the discerning modern woman.
-        </p>
-        <button className="bg-[#D97706] text-white px-10 py-4 text-xs font-bold tracking-widest uppercase rounded-sm hover:bg-black transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-xl">
-          EXPLORE THE EDIT
-        </button>
+      {/* Content Area */}
+      <div className="relative z-10 w-full px-6 md:px-20 pb-24 md:pb-32 animate-in fade-in slide-in-from-bottom-12 duration-1000">
+        <div className="max-w-4xl space-y-8">
+          <p className="text-[10px] md:text-[11px] font-bold tracking-[0.5em] uppercase text-white/90">
+            {content?.subtitle || 'THE SPRING 2024'}
+          </p>
+          
+          <div className="flex flex-col space-y-0">
+            <h1 className="text-5xl md:text-9xl font-thin tracking-tight leading-none text-white uppercase drop-shadow-sm">
+              {titlePart1}
+            </h1>
+            {titlePart2 && (
+              <h1 className="text-5xl md:text-9xl font-bold tracking-tighter leading-[0.85] text-white uppercase drop-shadow-md">
+                {titlePart2}
+              </h1>
+            )}
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4 pt-6">
+            <Link href={content?.cta_link || '/women'}>
+              <button className="bg-white text-black px-12 py-5 text-[10px] font-bold uppercase tracking-[0.2em] min-w-[180px] hover:bg-gray-200 transition-all active:scale-95 rounded-none">
+                {content?.cta_text || 'SHOP NOW'}
+              </button>
+            </Link>
+          </div>
+        </div>
       </div>
     </section>
   );
