@@ -50,11 +50,16 @@ const createAuthProvider = (Context: React.Context<AuthContextType>, client: Sup
     };
 
     useEffect(() => {
-      client.auth.getSession().then(({ data: { session } }) => {
-        setUser(session?.user ?? null);
-        if (session?.user) fetchProfile(session.user.id);
-        else setLoading(false);
-      });
+      client.auth.getSession()
+        .then(({ data: { session } }) => {
+          setUser(session?.user ?? null);
+          if (session?.user) fetchProfile(session.user.id);
+          else setLoading(false);
+        })
+        .catch((err) => {
+          console.error('Session fetching error:', err);
+          setLoading(false);
+        });
 
       const { data: { subscription } } = client.auth.onAuthStateChange(async (event, session) => {
         setUser(session?.user ?? null);
@@ -69,7 +74,14 @@ const createAuthProvider = (Context: React.Context<AuthContextType>, client: Sup
     }, []);
 
     const signOut = async () => {
-      await client.auth.signOut();
+      try {
+        await client.auth.signOut();
+        setUser(null);
+        setProfile(null);
+        // Clear any other session-related state if needed
+      } catch (err) {
+        console.error('Sign out error:', err);
+      }
     };
 
     const isAdmin = profile?.role === 'admin';

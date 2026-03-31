@@ -10,7 +10,11 @@ import { useCartStore } from '@/store/use-cart-store';
 import { useWishlistStore } from '@/store/use-wishlist-store';
 import { cn } from '@/lib/utils';
 
-export const Navbar = () => {
+interface NavbarProps {
+  transparent?: boolean;
+}
+
+export const Navbar = ({ transparent = false }: NavbarProps) => {
   const { user, profile, loading, isAdmin, signOut } = useAuth();
 
   const cartCount = useCartStore((state) => state.totalItems());
@@ -26,15 +30,17 @@ export const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const showSolid = !transparent || isScrolled;
+
   const navClasses = cn(
     "fixed top-0 z-50 w-full px-6 py-4 flex items-center justify-between transition-all duration-500",
-    isScrolled 
+    showSolid 
       ? "bg-white border-b border-gray-100 py-3 shadow-sm" 
       : "bg-transparent border-b border-transparent py-5"
   );
 
-  const textClasses = isScrolled ? "text-black" : "text-white";
-  const mutedTextClasses = isScrolled ? "text-gray-400" : "text-white/60";
+  const textClasses = showSolid ? "text-black" : "text-white";
+  const mutedTextClasses = showSolid ? "text-gray-400" : "text-white/60";
 
   return (
     <nav className={navClasses}>
@@ -57,7 +63,7 @@ export const Navbar = () => {
 
       {/* Nav Links */}
       <div className="hidden lg:flex items-center gap-8 ml-10">
-        {['MEN', 'WOMEN', 'KIDS', 'NEW ARRIVALS'].map((item) => (
+        {['MEN', 'WOMEN', 'KIDS'].map((item) => (
           <Link
             key={item}
             href={`/${item.toLowerCase().replace(' ', '-')}`}

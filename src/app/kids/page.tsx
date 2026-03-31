@@ -3,6 +3,8 @@ import { Footer } from '@/components/layout/Footer';
 import { KidsHero } from '@/components/sections/KidsHero';
 import { KidsCategories } from '@/components/sections/KidsCategories';
 import { KidsProducts } from '@/components/sections/KidsProducts';
+import { NewArrivals } from '@/components/sections/NewArrivals';
+import { OnSaleProducts } from '@/components/sections/OnSaleProducts';
 import { Newsletter } from '@/components/sections/Newsletter';
 import { createClient } from '@/lib/supabaseServer';
 
@@ -10,22 +12,28 @@ export default async function KidsPage() {
   const supabase = await createClient();
 
   // Parallel fetch for Kids' content
-  const [heroResponse, categoriesResponse, productsResponse] = await Promise.all([
+  const [heroResponse, categoriesResponse, newArrivalsResponse, saleResponse, selectionResponse] = await Promise.all([
     supabase.from('homepage_content').select('*').eq('section_key', 'kids_hero').single(),
     supabase.from('categories').select('*').eq('gender', 'kids').order('created_at', { ascending: false }),
-    supabase.from('products').select('*').eq('gender', 'kids').limit(6)
+    supabase.from('products').select('*').eq('gender', 'kids').order('created_at', { ascending: false }).limit(4),
+    supabase.from('products').select('*').eq('gender', 'kids').eq('is_sale', true).limit(4),
+    supabase.from('products').select('*').eq('gender', 'kids').limit(8)
   ]);
 
   const heroData = heroResponse.data;
   const categoriesData = categoriesResponse.data || [];
-  const productsData = productsResponse.data || [];
+  const newArrivalsData = newArrivalsResponse.data || [];
+  const saleData = saleResponse.data || [];
+  const selectionData = selectionResponse.data || [];
 
   return (
     <main className="min-h-screen bg-white">
-      <Navbar />
+      <Navbar transparent />
       <KidsHero initialData={heroData} />
       <KidsCategories initialData={categoriesData} />
-      <KidsProducts initialData={productsData} />
+      <NewArrivals initialData={newArrivalsData} />
+      <OnSaleProducts initialData={saleData} />
+      <KidsProducts initialData={selectionData} />
       <Newsletter />
       <Footer />
     </main>

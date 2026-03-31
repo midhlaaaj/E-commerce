@@ -35,7 +35,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-white">
-      <Navbar />
+      <Navbar transparent />
       <Hero initialData={heroData} />
       <Categories initialData={genderCardsData} />
       <NewArrivals initialData={newArrivalsData} />

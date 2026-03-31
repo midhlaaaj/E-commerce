@@ -5,7 +5,7 @@ import { adminSupabase } from '@/lib/supabase';
 import { uploadImage } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
 import { 
-  Plus, Trash2, Loader2, Image as ImageIcon, ChevronLeft, X, Upload, Check
+  Plus, Trash2, Loader2, Image as ImageIcon, ChevronLeft, X, Upload, Check, Search
 } from 'lucide-react';
 
 interface Category {
@@ -41,7 +41,14 @@ export default function EditProductClient({ initialCategories, initialProduct }:
     stock: initialProduct.stock?.toString() || '0',
     is_featured: initialProduct.is_featured || false,
     is_sale: initialProduct.is_sale || false,
+    colors: initialProduct.colors || [] as string[],
   });
+
+  const PREDEFINED_COLORS = [
+    'Black', 'White', 'Red', 'Blue', 'Green', 'Yellow', 
+    'Grey', 'Beige', 'Brown', 'Pink', 'Navy', 'Purple', 'Orange'
+  ];
+  const [colorSearch, setColorSearch] = useState('');
 
   const [images, setImages] = useState<ProductImage[]>(
     (initialProduct.images || []).map((url: string) => ({
@@ -99,7 +106,8 @@ export default function EditProductClient({ initialCategories, initialProduct }:
           is_featured: product.is_featured,
           is_sale: product.is_sale,
           sizes,
-          images: finalImageUrls
+          images: finalImageUrls,
+          colors: product.colors
         })
         .match({ id: initialProduct.id });
 
@@ -108,8 +116,19 @@ export default function EditProductClient({ initialCategories, initialProduct }:
         throw error;
       }
       
-      console.log('4. Success! Redirecting...');
-      window.location.href = '/admin/products';
+      console.log('4. Success! Cleanup and Redirecting...');
+      
+      // Dynamic Redirection back to source collection
+      if (selectedGender) {
+        const categoryName = categories.find(c => c.id === product.category_id)?.name;
+        if (categoryName) {
+          window.location.href = `/admin/products/${selectedGender}/${categoryName}`;
+        } else {
+          window.location.href = `/admin/products/${selectedGender}`;
+        }
+      } else {
+        window.location.href = '/admin/products';
+      }
     } catch (err: any) {
       console.error('Error updating product:', err);
       setSubmitError(err.message || 'An unknown error occurred while updating the product.');
@@ -207,22 +226,7 @@ export default function EditProductClient({ initialCategories, initialProduct }:
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Gender Selection *</label>
-                <select 
-                  className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#D97706] transition-all"
-                  value={selectedGender}
-                  onChange={(e) => {
-                    setSelectedGender(e.target.value);
-                    setProduct({...product, category_id: ''});
-                  }}
-                >
-                  <option value="men">Men</option>
-                  <option value="women">Women</option>
-                  <option value="kids">Kids</option>
-                </select>
-              </div>
-              <div className="space-y-2">
+              <div className="col-span-2 space-y-2">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Category *</label>
                 {filteredCategories.length === 0 ? (
                   <div className="w-full px-4 py-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-bold uppercase tracking-widest text-center">
@@ -376,6 +380,65 @@ export default function EditProductClient({ initialCategories, initialProduct }:
                   />
                   <span className="text-sm font-semibold text-gray-700 group-hover:text-black transition-colors">Enable Sale Tag</span>
                 </label>
+              </div>
+
+              <div className="space-y-4 pt-4 border-t border-gray-50">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Product Colors</label>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {product.colors.map((c: string) => (
+                    <span key={c} className="flex items-center gap-2 px-3 py-1.5 bg-[#D97706]/10 text-[#D97706] border border-[#D97706]/20 rounded-lg text-[10px] font-bold uppercase tracking-widest">
+                      {c}
+                      <button type="button" onClick={() => setProduct({...product, colors: product.colors.filter((col: string) => col !== c)})} className="hover:text-red-600"><X size={12} /></button>
+                    </span>
+                  ))}
+                </div>
+                
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <Search size={14} />
+                  </div>
+                  <input 
+                    type="text" 
+                    placeholder="Search or add custom color..."
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl text-xs focus:ring-1 focus:ring-[#D97706] transition-all"
+                    value={colorSearch}
+                    onChange={(e) => setColorSearch(e.target.value)}
+                  />
+                </div>
+
+                <div className="max-h-40 overflow-y-auto space-y-1 pr-2 custom-scrollbar">
+                  {PREDEFINED_COLORS.filter((c: string) => 
+                    c.toLowerCase().includes(colorSearch.toLowerCase()) && 
+                    !product.colors.includes(c)
+                  ).map((c: string) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => {
+                        setProduct({...product, colors: [...product.colors, c]});
+                        setColorSearch('');
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg text-xs font-medium text-gray-600 flex justify-between items-center group transition-colors"
+                    >
+                      {c}
+                      <Plus size={12} className="opacity-0 group-hover:opacity-100" />
+                    </button>
+                  ))}
+                  
+                  {colorSearch && !PREDEFINED_COLORS.some(c => c.toLowerCase() === colorSearch.toLowerCase()) && !product.colors.includes(colorSearch) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProduct({...product, colors: [...product.colors, colorSearch]});
+                        setColorSearch('');
+                      }}
+                      className="w-full text-left px-4 py-2 bg-[#D97706]/5 hover:bg-[#D97706]/10 rounded-lg text-xs font-bold text-[#D97706] flex justify-between items-center transition-colors border border-[#D97706]/10"
+                    >
+                      Add Custom: "{colorSearch}"
+                      <Plus size={12} />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { adminSupabase } from '@/lib/supabase';
 import { uploadImage } from '@/lib/storage';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   Plus, 
   Trash2, 
@@ -12,7 +12,8 @@ import {
   ChevronLeft,
   X,
   Upload,
-  Check
+  Check,
+  Search
 } from 'lucide-react';
 
 interface Category {
@@ -32,21 +33,32 @@ interface AddProductClientProps {
 
 export default function AddProductClient({ initialCategories }: AddProductClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const genderParam = searchParams.get('gender');
+  const categoryParam = searchParams.get('category_id');
+
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
-  const [selectedGender, setSelectedGender] = useState('men');
+  const [categories] = useState<Category[]>(initialCategories);
+  const [selectedGender, setSelectedGender] = useState(genderParam || 'men');
   
   const [product, setProduct] = useState({
     name: '',
     description: '',
     price: '',
     offer_price: '',
-    category_id: '',
-    gender: 'men',
+    category_id: categoryParam || '',
+    gender: genderParam || 'men',
     stock: '',
     is_featured: false,
     is_sale: false,
+    colors: [] as string[],
   });
+
+  const PREDEFINED_COLORS = [
+    'Black', 'White', 'Red', 'Blue', 'Green', 'Yellow', 
+    'Grey', 'Beige', 'Brown', 'Pink', 'Navy', 'Purple', 'Orange'
+  ];
+  const [colorSearch, setColorSearch] = useState('');
 
   const [images, setImages] = useState<ProductImage[]>([]);
   const [sizes, setSizes] = useState<string[]>([]);
@@ -65,6 +77,32 @@ export default function AddProductClient({ initialCategories }: AddProductClient
   };
 
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [draftSaved, setDraftSaved] = useState(false);
+
+  // 1. Restore Draft on Mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('elitewear_product_draft');
+    if (savedDraft) {
+      try {
+        const { product: savedProduct, sizes: savedSizes } = JSON.parse(savedDraft);
+        setProduct(prev => ({ ...prev, ...savedProduct }));
+        setSizes(savedSizes || []);
+        console.log('Draft restored successfully.');
+      } catch (e) {
+        console.error('Failed to restore draft:', e);
+      }
+    }
+  }, []);
+
+  // 2. Persist Draft on Change
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      localStorage.setItem('elitewear_product_draft', JSON.stringify({ product, sizes }));
+      setDraftSaved(true);
+      setTimeout(() => setDraftSaved(false), 2000);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [product, sizes]);
 
   async function handleAddProduct(e: React.FormEvent) {
     e.preventDefault();
@@ -92,7 +130,9 @@ export default function AddProductClient({ initialCategories }: AddProductClient
           stock: parseInt(product.stock) || 0,
           gender: selectedGender,
           images: uploadedUrls,
-          sizes
+          sizes,
+          colors: product.colors,
+          rating: 5.0
         }]);
 
       if (error) {
@@ -100,9 +140,20 @@ export default function AddProductClient({ initialCategories }: AddProductClient
         throw error;
       }
       
-      console.log('4. Success! Redirecting...');
-      // Use hard navigation to ensure full cache and state invalidation
-      window.location.href = '/admin/products';
+      console.log('4. Success! Cleanup and Redirecting...');
+      localStorage.removeItem('elitewear_product_draft');
+      
+      // Dynamic Redirection back to source collection
+      if (selectedGender) {
+        const categoryName = categories.find(c => c.id === product.category_id)?.name;
+        if (categoryName) {
+          window.location.href = `/admin/products/${selectedGender}/${categoryName}`;
+        } else {
+          window.location.href = `/admin/products/${selectedGender}`;
+        }
+      } else {
+        window.location.href = '/admin/products';
+      }
     } catch (err: any) {
       console.error('Error adding product:', err);
       setSubmitError(err.message || 'An unknown error occurred while adding the product.');
@@ -196,41 +247,45 @@ export default function AddProductClient({ initialCategories }: AddProductClient
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Gender Selection *</label>
-                <select 
-                  className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#D97706] transition-all"
-                  value={selectedGender}
-                  onChange={(e) => {
-                    setSelectedGender(e.target.value);
-                    setProduct({...product, category_id: ''});
-                  }}
-                >
-                  <option value="men">Men</option>
-                  <option value="women">Women</option>
-                  <option value="kids">Kids</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Category *</label>
-                {filteredCategories.length === 0 ? (
-                  <div className="w-full px-4 py-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-bold uppercase tracking-widest text-center">
-                    No Categories Found. Create one first!
-                  </div>
-                ) : (
+              {!genderParam && (
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Gender Selection *</label>
                   <select 
-                    required
                     className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#D97706] transition-all"
-                    value={product.category_id}
-                    onChange={(e) => setProduct({...product, category_id: e.target.value})}
+                    value={selectedGender}
+                    onChange={(e) => {
+                      setSelectedGender(e.target.value);
+                      setProduct({...product, category_id: '', gender: e.target.value});
+                    }}
                   >
-                    <option value="">Select Category</option>
-                    {filteredCategories.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
+                    <option value="men">Men</option>
+                    <option value="women">Women</option>
+                    <option value="kids">Kids</option>
                   </select>
-                )}
-              </div>
+                </div>
+              )}
+              {!categoryParam && (
+                <div className={genderParam ? "col-span-2 space-y-2" : "space-y-2"}>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Category *</label>
+                  {filteredCategories.length === 0 ? (
+                    <div className="w-full px-4 py-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-bold uppercase tracking-widest text-center">
+                      No Categories Found. Create one first!
+                    </div>
+                  ) : (
+                    <select 
+                      required
+                      className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#D97706] transition-all"
+                      value={product.category_id}
+                      onChange={(e) => setProduct({...product, category_id: e.target.value})}
+                    >
+                      <option value="">Select Category</option>
+                      {filteredCategories.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -366,6 +421,65 @@ export default function AddProductClient({ initialCategories }: AddProductClient
                   <span className="text-sm font-semibold text-gray-700 group-hover:text-black transition-colors">Enable Sale Tag</span>
                 </label>
               </div>
+
+              <div className="space-y-4 pt-4 border-t border-gray-50">
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Product Colors</label>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {product.colors.map(c => (
+                    <span key={c} className="flex items-center gap-2 px-3 py-1.5 bg-[#D97706]/10 text-[#D97706] border border-[#D97706]/20 rounded-lg text-[10px] font-bold uppercase tracking-widest">
+                      {c}
+                      <button type="button" onClick={() => setProduct({...product, colors: product.colors.filter(col => col !== c)})} className="hover:text-red-600"><X size={12} /></button>
+                    </span>
+                  ))}
+                </div>
+                
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <Search size={14} />
+                  </div>
+                  <input 
+                    type="text" 
+                    placeholder="Search or add custom color (e.g. Light Pink)..."
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 border-none rounded-xl text-xs focus:ring-1 focus:ring-[#D97706] transition-all"
+                    value={colorSearch}
+                    onChange={(e) => setColorSearch(e.target.value)}
+                  />
+                </div>
+
+                <div className="max-h-40 overflow-y-auto space-y-1 pr-2 custom-scrollbar">
+                  {PREDEFINED_COLORS.filter(c => 
+                    c.toLowerCase().includes(colorSearch.toLowerCase()) && 
+                    !product.colors.includes(c)
+                  ).map(c => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => {
+                        setProduct({...product, colors: [...product.colors, c]});
+                        setColorSearch('');
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg text-xs font-medium text-gray-600 flex justify-between items-center group transition-colors"
+                    >
+                      {c}
+                      <Plus size={12} className="opacity-0 group-hover:opacity-100" />
+                    </button>
+                  ))}
+                  
+                  {colorSearch && !PREDEFINED_COLORS.some(c => c.toLowerCase() === colorSearch.toLowerCase()) && !product.colors.includes(colorSearch) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProduct({...product, colors: [...product.colors, colorSearch]});
+                        setColorSearch('');
+                      }}
+                      className="w-full text-left px-4 py-2 bg-[#D97706]/5 hover:bg-[#D97706]/10 rounded-lg text-xs font-bold text-[#D97706] flex justify-between items-center transition-colors border border-[#D97706]/10"
+                    >
+                      Add Custom: "{colorSearch}"
+                      <Plus size={12} />
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -376,14 +490,21 @@ export default function AddProductClient({ initialCategories }: AddProductClient
               {submitError}
             </div>
           )}
-          <button 
-            type="submit"
-            disabled={loading}
-            className="flex items-center gap-3 px-10 py-4 bg-black text-white rounded-2xl text-lg font-bold hover:bg-gray-800 transition-all shadow-2xl shadow-black/20 active:scale-95 disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="animate-spin" size={24} /> : <Check size={24} />}
-            {loading ? 'Publishing...' : 'Publish Product'}
-          </button>
+          <div className="flex items-center gap-6">
+            {draftSaved && (
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest animate-pulse">
+                Draft Saved Locally
+              </span>
+            )}
+            <button 
+              type="submit"
+              disabled={loading}
+              className="flex items-center gap-3 px-10 py-4 bg-black text-white rounded-2xl text-lg font-bold hover:bg-gray-800 transition-all shadow-2xl shadow-black/20 active:scale-95 disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="animate-spin" size={24} /> : <Check size={24} />}
+              {loading ? 'Publishing...' : 'Publish Product'}
+            </button>
+          </div>
         </div>
       </form>
     </div>

@@ -24,12 +24,19 @@ export async function uploadImage(file: File, bucket: string, path?: string): Pr
   const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
   const filePath = path ? `${path}/${fileName}` : fileName;
 
-  const { data, error } = await adminSupabase.storage
+  // Add a 30s timeout to prevent hanging in background tabs
+  const uploadPromise = adminSupabase.storage
     .from(bucket)
     .upload(filePath, fileToUpload, {
       cacheControl: '3600',
       upsert: false
     });
+
+  const timeoutPromise = new Promise<{ data: any, error: any }>((_, reject) => 
+    setTimeout(() => reject(new Error('Upload timed out after 30 seconds. Please keep the tab active.')), 30000)
+  );
+
+  const { data, error } = await Promise.race([uploadPromise, timeoutPromise]) as { data: any, error: any };
 
   if (error) {
     throw new Error(`Upload failed: ${error.message}`);

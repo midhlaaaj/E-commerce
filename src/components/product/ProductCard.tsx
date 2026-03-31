@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, ShoppingBag, X } from 'lucide-react';
@@ -28,10 +28,15 @@ interface ProductCardProps {
 }
 
 export const ProductCard = ({ product, badge, variant = 'default' }: ProductCardProps) => {
+  const [mounted, setMounted] = useState(false);
   const { toggleItem, isInWishlist } = useWishlistStore();
   const isWishlisted = isInWishlist(product.id);
   const [isSelectingSize, setIsSelectingSize] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const sizes = ['XS', 'S', 'M', 'L', 'XL'];
 
@@ -140,10 +145,10 @@ export const ProductCard = ({ product, badge, variant = 'default' }: ProductCard
               onClick={toggleWishlist}
               className={cn(
                 "w-8 h-8 flex items-center justify-center rounded-full border border-gray-100 shadow-sm transition-all hover:scale-110",
-                isWishlisted ? "bg-red-50 text-red-500 border-red-100" : "bg-white text-gray-400 hover:text-black"
+                mounted && isWishlisted ? "bg-red-50 text-red-500 border-red-100" : "bg-white text-gray-400 hover:text-black"
               )}
             >
-              <Heart size={14} fill={isWishlisted ? "currentColor" : "none"} />
+              <Heart size={14} fill={mounted && isWishlisted ? "currentColor" : "none"} />
             </button>
             <button
               onClick={handleAddToCart}

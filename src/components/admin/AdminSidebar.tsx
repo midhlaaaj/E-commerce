@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { adminSupabase } from '@/lib/supabase';
@@ -10,6 +11,7 @@ import {
   Home,
   LogOut,
   ChevronRight,
+  ChevronDown,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -19,11 +21,34 @@ interface SidebarProps {
 
 export default function AdminSidebar({ user, profile }: SidebarProps) {
   const pathname = usePathname();
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    // Auto-expand sections based on path
+    if (pathname.includes('/admin/products')) setExpandedSections(prev => ({ ...prev, Products: true }));
+    if (pathname.includes('/admin/categories')) setExpandedSections(prev => ({ ...prev, Categories: true }));
+  }, [pathname]);
+
+  const toggleSection = (label: string) => {
+    setExpandedSections(prev => ({ ...prev, [label]: !prev[label] }));
+  };
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/admin' },
-    { icon: Package, label: 'Products', href: '/admin/products' },
-    { icon: Layers, label: 'Categories', href: '/admin/categories' },
+    { 
+      icon: Package, 
+      label: 'Products', 
+      href: '/admin/products',
+      hasDropdown: true,
+      subItems: ['MEN', 'WOMEN', 'KIDS']
+    },
+    { 
+      icon: Layers, 
+      label: 'Categories', 
+      href: '/admin/categories',
+      hasDropdown: true,
+      subItems: ['MEN', 'WOMEN', 'KIDS']
+    },
     { icon: Home, label: 'Homepage Content', href: '/admin/homepage' },
   ];
 
@@ -54,23 +79,58 @@ export default function AdminSidebar({ user, profile }: SidebarProps) {
          </div>
       </div>
 
-      <nav className="flex-1 px-4 space-y-2">
+      <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
         {menuItems.map((item) => {
           const isActive = pathname === item.href;
+          const isExpanded = expandedSections[item.label];
+          
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group ${
-                isActive
-                  ? 'bg-[#D97706] text-white shadow-lg shadow-[#D97706]/20'
-                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
-              }`}
-            >
-              <item.icon size={18} className={`${isActive ? 'scale-110' : 'group-hover:scale-110 transition-transform'}`} />
-              <span className="text-xs font-bold tracking-widest uppercase">{item.label}</span>
-              {isActive && <ChevronRight className="ml-auto opacity-50" size={14} />}
-            </Link>
+            <div key={item.label} className="space-y-1">
+              <div className="flex gap-1">
+                <Link
+                  href={item.href}
+                  className={`flex-1 flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group ${
+                    isActive
+                      ? 'bg-[#D97706] text-white shadow-lg shadow-[#D97706]/20'
+                      : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  <item.icon size={18} className={`${isActive ? 'scale-110' : 'group-hover:scale-110 transition-transform'}`} />
+                  <span className="text-xs font-bold tracking-widest uppercase">{item.label}</span>
+                </Link>
+                
+                {item.hasDropdown && (
+                  <button 
+                    onClick={() => toggleSection(item.label)}
+                    className={`px-3 rounded-xl transition-colors ${
+                      isExpanded ? 'bg-white/10 text-white' : 'text-gray-600 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <ChevronDown size={14} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                  </button>
+                )}
+              </div>
+              
+              {item.hasDropdown && isExpanded && (
+                <div className="ml-12 space-y-1 border-l border-white/5 pl-4 animate-in slide-in-from-top-2 duration-300">
+                  {item.subItems.map((sub) => {
+                    const subHref = `/admin/${item.label.toLowerCase()}/${sub.toLowerCase()}`;
+                    const isSubActive = pathname === subHref;
+                    return (
+                      <Link 
+                        key={sub} 
+                        href={subHref}
+                        className={`block text-[10px] font-bold tracking-[0.2em] py-2 transition-colors ${
+                          isSubActive ? 'text-[#D97706]' : 'text-gray-500 hover:text-white'
+                        }`}
+                      >
+                        {sub}
+                      </Link>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           );
         })}
       </nav>

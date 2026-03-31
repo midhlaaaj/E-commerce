@@ -4,10 +4,13 @@ import CategoriesClient from './CategoriesClient';
 export default async function CategoriesPage() {
   const supabase = await createAdminClient();
 
-  const { data: categories } = await supabase
-    .from('categories')
-    .select('*')
-    .order('created_at', { ascending: false });
+  const [categoriesResponse, herosResponse] = await Promise.all([
+    supabase.from('categories').select('*').order('created_at', { ascending: false }),
+    supabase.from('homepage_content').select('section_key, image_url').in('section_key', ['men_hero', 'women_hero', 'kids_hero'])
+  ]);
 
-  return <CategoriesClient initialCategories={categories || []} />;
+  const categories = categoriesResponse.data || [];
+  const heros = herosResponse.data || [];
+
+  return <CategoriesClient initialCategories={categories} initialHeros={heros} />;
 }

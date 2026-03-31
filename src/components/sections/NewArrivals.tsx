@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { ProductCard } from '@/components/product/ProductCard';
 
@@ -21,6 +22,7 @@ export const NewArrivals = ({ initialData = [] }: NewArrivalsProps) => {
         subtitle="CURATED FOR THE ARCHIVE" 
         ctaText="VIEW ALL" 
         ctaLink="/new-arrivals"
+        icon={<ArrowRight size={14} />}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

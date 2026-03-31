@@ -53,11 +53,17 @@ export const Hero = ({ initialData }: HeroProps) => {
           </p>
           
           <div className="flex flex-col space-y-0">
-            <h1 className="text-5xl md:text-9xl font-thin tracking-tight leading-none text-white uppercase drop-shadow-sm opacity-95">
+            <h1 
+              style={{ fontFamily: 'var(--font-roboto), sans-serif', fontWeight: 100 }}
+              className="text-5xl md:text-9xl tracking-tight leading-none text-white uppercase drop-shadow-sm opacity-95"
+            >
               {titlePart1}
             </h1>
             {titlePart2 && (
-              <h1 className="text-5xl md:text-9xl font-bold tracking-tighter leading-[0.85] text-white uppercase drop-shadow-md">
+              <h1 
+                style={{ fontFamily: 'var(--font-roboto), sans-serif' }}
+                className="text-5xl md:text-9xl font-bold tracking-tighter leading-[0.85] text-white uppercase drop-shadow-md"
+              >
                 {titlePart2}
               </h1>
             )}

@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface MenCategoriesProps {
   initialData?: any[];
@@ -21,31 +22,35 @@ export const MenCategories = ({ initialData = [] }: MenCategoriesProps) => {
   ];
 
   return (
-    <section className="py-12 px-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <span className="text-[10px] font-bold text-[#D97706] tracking-[0.2em] uppercase">ELITE DESIGNS</span>
-        <h2 className="text-2xl font-bold tracking-tight uppercase">SHOP BY CATEGORY</h2>
+    <section className="py-20 px-6 max-w-7xl mx-auto">
+      <div className="mb-12">
+        <span className="text-[10px] font-bold text-[#D97706] tracking-[0.2em] uppercase mb-2 block">ELITE DESIGNS</span>
+        <h2 className="text-3xl font-extrabold tracking-tight uppercase">SHOP BY CATEGORY</h2>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {categories.map((cat, i) => (
-          <div key={i} className="group relative aspect-[4/5] overflow-hidden rounded-xl cursor-pointer bg-gray-50">
+          <Link 
+            key={i} 
+            href={`/category/${cat.name.toLowerCase().replace(/\s+/g, '-')}`}
+            className="group relative aspect-[4/5] overflow-hidden rounded-xl cursor-pointer bg-gray-50 bg-white shadow-sm hover:shadow-xl transition-all duration-500"
+          >
             <Image 
               src={cat.image_url} 
               alt={cat.name}
               fill
-              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              className="object-cover transition-transform duration-1000 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 33vw"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
-              <h3 className="text-white font-bold text-xl tracking-tighter uppercase mb-4 translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-8 h-1/2 flex items-end">
+              <h3 className="text-white font-extrabold text-2xl tracking-tighter uppercase mb-2 translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
                 {cat.name}
               </h3>
             </div>
-            <div className="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+            <div className="absolute top-6 right-6 w-12 h-12 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-y-4 group-hover:translate-y-0 transition-all duration-500">
               <span className="text-white text-xl">→</span>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </section>

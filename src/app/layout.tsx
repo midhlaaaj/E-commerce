@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Roboto } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import { AuthProvider } from "@/hooks/useAuth";
+import { Navbar } from "@/components/layout/Navbar";
 
 const roboto = Roboto({
   weight: ['100', '300', '400', '500', '700', '900'],
@@ -12,7 +12,7 @@ const roboto = Roboto({
 
 export const metadata: Metadata = {
   title: "ELITEWEAR | Modern Elegance",
-  description: "Luxury minimalist fashion for the modern era.",
+  description: "Experience premium fashion and lifestyle with ELITEWEAR.",
 };
 
 export default function RootLayout({
@@ -21,14 +21,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <body className={cn(
-        "min-h-screen bg-background font-sans antialiased selection:bg-[#D97706] selection:text-white",
-        roboto.variable
-      )}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+    <html lang="en">
+      <body className={cn("min-h-screen bg-white font-sans antialiased", roboto.variable)}>
+        <Navbar transparent />
+        {children}
       </body>
     </html>
   );

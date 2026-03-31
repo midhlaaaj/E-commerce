@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { ProductCard } from '@/components/product/ProductCard';
 
@@ -31,6 +32,7 @@ export const OnSaleProducts = ({ initialData = [] }: OnSaleProductsProps) => {
         subtitle="LIMITED TIME MARKDOWNS" 
         ctaText="VIEW ALL" 
         ctaLink="/sale"
+        icon={<ArrowRight size={14} />}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

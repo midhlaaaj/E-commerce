@@ -11,6 +11,7 @@ interface SectionHeaderProps {
   ctaLink?: string;
   ctaOnClick?: (e: React.MouseEvent) => void;
   className?: string;
+  icon?: React.ReactNode;
 }
 
 export const SectionHeader = ({
@@ -20,14 +21,15 @@ export const SectionHeader = ({
   ctaText,
   ctaLink,
   ctaOnClick,
-  className
+  className,
+  icon
 }: SectionHeaderProps) => {
-  const ctaClasses = "text-[10px] font-extrabold text-black uppercase tracking-[0.2em] border-b-2 border-black pb-1 hover:text-gray-500 hover:border-gray-300 transition-all sm:mb-1";
+  const ctaClasses = "flex items-center gap-2 text-[10px] font-bold text-[#D97706] uppercase tracking-[0.2em] hover:text-black transition-all group/cta";
 
   return (
-    <div className={cn("flex flex-col sm:flex-row items-start sm:items-end justify-between mb-6 gap-6", className)}>
-      <div className="space-y-2">
-        <h2 className="text-4xl text-[#1A1614] tracking-tight uppercase leading-none">
+    <div className={cn("flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-6 px-1", className)}>
+      <div className="space-y-1">
+        <h2 className="text-4xl sm:text-5xl text-[#1A1614] tracking-tighter uppercase leading-none">
           <span className="font-light">{title1}</span> <span className="font-extrabold">{title2}</span>
         </h2>
         {subtitle && (
@@ -37,17 +39,19 @@ export const SectionHeader = ({
         )}
       </div>
       {ctaText && (
-        <>
+        <div className="flex items-center">
           {ctaOnClick ? (
             <button onClick={ctaOnClick} className={ctaClasses}>
-              {ctaText}
+              {icon && <span className="transition-transform group-hover/cta:scale-110">{icon}</span>}
+              <span className="border-b border-[#D97706]/30 group-hover/cta:border-black pb-1">{ctaText}</span>
             </button>
           ) : ctaLink ? (
             <Link href={ctaLink} className={ctaClasses}>
-              {ctaText}
+              {icon && <span className="transition-transform group-hover/cta:scale-110">{icon}</span>}
+              <span className="border-b border-[#D97706]/30 group-hover/cta:border-black pb-1">{ctaText}</span>
             </Link>
           ) : null}
-        </>
+        </div>
       )}
     </div>
   );
