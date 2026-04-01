@@ -38,6 +38,9 @@ interface CollectionClientProps {
   subtitle?: string;
   backLink?: string;
   backLabel?: string;
+  hideFilters?: boolean;
+  hideSort?: boolean;
+  isBackDynamic?: boolean;
 }
 
 export default function CollectionClient({ 
@@ -47,14 +50,22 @@ export default function CollectionClient({
   title2,
   subtitle,
   backLink,
-  backLabel
+  backLabel,
+  hideFilters = false,
+  hideSort = false,
+  isBackDynamic = false
 }: CollectionClientProps) {
   const router = useRouter();
-  const [products] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
   const sortRef = useRef<HTMLDivElement>(null);
+
+  // Sync state with props when initialProducts changes (e.g. wishlist removal)
+  useEffect(() => {
+    setProducts(initialProducts);
+  }, [initialProducts]);
   
   // Dynamic Price Range Calculation based on actual products
   const { minAvailablePrice, maxAvailablePrice } = useMemo(() => {
@@ -161,7 +172,7 @@ export default function CollectionClient({
       <div className="max-w-7xl mx-auto px-6 md:px-12 pt-28">
         {/* Breadcrumb / Back */}
         <button 
-          onClick={() => router.push(backLink || `/${gender}`)}
+          onClick={() => isBackDynamic ? router.back() : router.push(backLink || `/${gender}`)}
           className="group flex items-center gap-3 text-[9px] font-bold uppercase tracking-[0.3em] text-gray-400 hover:text-black transition-all mb-6"
         >
           <ChevronLeft size={12} className="group-hover:-translate-x-1 transition-transform" />
@@ -180,48 +191,52 @@ export default function CollectionClient({
           </div>
 
           <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={cn(
-                "flex items-center gap-2 px-8 py-3 border text-[10px] font-bold uppercase tracking-widest transition-all rounded-none",
-                isFilterOpen ? "bg-[#1A1614] text-white border-[#1A1614]" : "bg-white text-[#1A1614] border-gray-100 hover:border-black"
-              )}
-            >
-              <SlidersHorizontal size={14} />
-              Filters {selectedColors.length > 0 ? `(${selectedColors.length})` : ''}
-            </button>
-
-            <div className="relative" ref={sortRef}>
+            {!hideFilters && (
               <button 
-                onClick={() => setIsSortOpen(!isSortOpen)}
-                className="flex items-center justify-between gap-8 px-8 py-3 border border-gray-100 hover:border-black bg-white text-[10px] font-bold uppercase tracking-widest transition-all rounded-none min-w-[180px]"
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={cn(
+                  "flex items-center gap-2 px-8 py-3 border text-[10px] font-bold uppercase tracking-widest transition-all rounded-none",
+                  isFilterOpen ? "bg-[#1A1614] text-white border-[#1A1614]" : "bg-white text-[#1A1614] border-gray-100 hover:border-black"
+                )}
               >
-                <span>{currentSortLabel}</span>
-                <ChevronDown size={14} className={cn("transition-transform duration-300", isSortOpen && "rotate-180")} />
+                <SlidersHorizontal size={14} />
+                Filters {selectedColors.length > 0 ? `(${selectedColors.length})` : ''}
               </button>
+            )}
 
-              {isSortOpen && (
-                <div className="absolute top-full right-0 mt-1 w-full bg-white border border-gray-100 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="py-1">
-                    {sortOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => {
-                          setSortBy(option.value);
-                          setIsSortOpen(false);
-                        }}
-                        className={cn(
-                          "w-full text-left px-8 py-3 text-[9px] font-bold uppercase tracking-widest transition-colors",
-                          sortBy === option.value ? "bg-gray-50 text-black" : "text-gray-400 hover:bg-gray-50 hover:text-black"
-                        )}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
+            {!hideSort && (
+              <div className="relative" ref={sortRef}>
+                <button 
+                  onClick={() => setIsSortOpen(!isSortOpen)}
+                  className="flex items-center justify-between gap-8 px-8 py-3 border border-gray-100 hover:border-black bg-white text-[10px] font-bold uppercase tracking-widest transition-all rounded-none min-w-[180px]"
+                >
+                  <span>{currentSortLabel}</span>
+                  <ChevronDown size={14} className={cn("transition-transform duration-300", isSortOpen && "rotate-180")} />
+                </button>
+
+                {isSortOpen && (
+                  <div className="absolute top-full right-0 mt-1 w-full bg-white border border-gray-100 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="py-1">
+                      {sortOptions.map((option) => (
+                        <button
+                          key={option.value}
+                          onClick={() => {
+                            setSortBy(option.value);
+                            setIsSortOpen(false);
+                          }}
+                          className={cn(
+                            "w-full text-left px-8 py-3 text-[9px] font-bold uppercase tracking-widest transition-colors",
+                            sortBy === option.value ? "bg-gray-50 text-black" : "text-gray-400 hover:bg-gray-50 hover:text-black"
+                          )}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -231,77 +246,79 @@ export default function CollectionClient({
 
       <div className="max-w-7xl mx-auto px-6 md:px-12 pb-16 flex gap-12">
         {/* Sidebar Filters (Desktop) */}
-        <aside className={cn(
-          "w-72 flex-shrink-0 space-y-12 transition-all duration-500",
-          isFilterOpen ? "block" : "hidden opacity-0 -translate-x-10"
-        )}>
-          <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1A1614]">Price Range</h3>
-              {(priceRange.min > minAvailablePrice || priceRange.max < maxAvailablePrice) && (
-                 <button onClick={() => setPriceRange({ min: minAvailablePrice, max: maxAvailablePrice })} className="text-[9px] font-bold text-[#D97706] hover:underline uppercase tracking-widest">Reset</button>
-              )}
-            </div>
-            <PriceRangeSlider 
-              min={minAvailablePrice} 
-              max={maxAvailablePrice} 
-              valueMin={priceRange.min}
-              valueMax={priceRange.max}
-              onChange={(min, max) => setPriceRange({ min, max })} 
-            />
-          </div>
-
-          <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1A1614]">Colours</h3>
-              {selectedColors.length > 0 && (
-                 <button onClick={() => setSelectedColors([])} className="text-[9px] font-bold text-[#D97706] hover:underline uppercase tracking-widest">Clear ({selectedColors.length})</button>
-              )}
-            </div>
-            
-            <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="Search colour..."
-                value={colorSearch}
-                onChange={(e) => setColorSearch(e.target.value)}
-                className="w-full bg-gray-50 border-none rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium focus:ring-1 focus:ring-[#D97706] transition-all"
+        {!hideFilters && (
+          <aside className={cn(
+            "w-72 flex-shrink-0 space-y-12 transition-all duration-500",
+            isFilterOpen ? "block" : "hidden opacity-0 -translate-x-10"
+          )}>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1A1614]">Price Range</h3>
+                {(priceRange.min > minAvailablePrice || priceRange.max < maxAvailablePrice) && (
+                   <button onClick={() => setPriceRange({ min: minAvailablePrice, max: maxAvailablePrice })} className="text-[9px] font-bold text-[#D97706] hover:underline uppercase tracking-widest">Reset</button>
+                )}
+              </div>
+              <PriceRangeSlider 
+                min={minAvailablePrice} 
+                max={maxAvailablePrice} 
+                valueMin={priceRange.min}
+                valueMax={priceRange.max}
+                onChange={(min, max) => setPriceRange({ min, max })} 
               />
             </div>
 
-            <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-              {availableColors.filter(c => c.toLowerCase().includes(colorSearch.toLowerCase())).map(color => (
-                <label key={color} className="flex items-center gap-3 group cursor-pointer">
-                  <div className="relative flex items-center justify-center">
-                    <input 
-                      type="checkbox"
-                      checked={selectedColors.includes(color)}
-                      onChange={() => toggleColor(color)}
-                      className="peer w-5 h-5 border-2 border-gray-100 rounded-lg appearance-none checked:bg-black checked:border-black transition-all"
-                    />
-                    <div className="absolute opacity-0 peer-checked:opacity-100 text-white transition-opacity">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1A1614]">Colours</h3>
+                {selectedColors.length > 0 && (
+                   <button onClick={() => setSelectedColors([])} className="text-[9px] font-bold text-[#D97706] hover:underline uppercase tracking-widest">Clear ({selectedColors.length})</button>
+                )}
+              </div>
+              
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input 
+                  type="text" 
+                  placeholder="Search colour..."
+                  value={colorSearch}
+                  onChange={(e) => setColorSearch(e.target.value)}
+                  className="w-full bg-gray-50 border-none rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium focus:ring-1 focus:ring-[#D97706] transition-all"
+                />
+              </div>
+
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                {availableColors.filter(c => c.toLowerCase().includes(colorSearch.toLowerCase())).map(color => (
+                  <label key={color} className="flex items-center gap-3 group cursor-pointer">
+                    <div className="relative flex items-center justify-center">
+                      <input 
+                        type="checkbox"
+                        checked={selectedColors.includes(color)}
+                        onChange={() => toggleColor(color)}
+                        className="peer w-5 h-5 border-2 border-gray-100 rounded-lg appearance-none checked:bg-black checked:border-black transition-all"
+                      />
+                      <div className="absolute opacity-0 peer-checked:opacity-100 text-white transition-opacity">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </div>
                     </div>
-                  </div>
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest group-hover:text-black transition-colors">
-                    {color}
-                  </span>
-                </label>
-              ))}
-              {availableColors.length === 0 && (
-                <p className="text-[10px] text-gray-400 font-medium italic">No colour matches found in current collection.</p>
-              )}
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest group-hover:text-black transition-colors">
+                      {color}
+                    </span>
+                  </label>
+                ))}
+                {availableColors.length === 0 && (
+                  <p className="text-[10px] text-gray-400 font-medium italic">No colour matches found in current collection.</p>
+                )}
+              </div>
             </div>
-          </div>
-        </aside>
+          </aside>
+        )}
 
         {/* Product Grid */}
         <div className="flex-1">
           {filteredProducts.length > 0 ? (
             <div className={cn(
               "grid gap-x-6 gap-y-12 transition-all duration-500",
-              isFilterOpen ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-2 lg:grid-cols-4"
+              isFilterOpen && !hideFilters ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-2 lg:grid-cols-4"
             )}>
               {filteredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />

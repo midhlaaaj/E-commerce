@@ -1,81 +1,157 @@
-import { ShoppingCart, Truck, RotateCcw } from 'lucide-react';
+'use client';
+
+import { useState } from 'react';
+import { ShoppingBag, Truck, RotateCcw, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useCartStore } from '@/store/use-cart-store';
 
 export const ProductInfo = ({ product }: { product: any }) => {
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState(1);
+  const addItem = useCartStore((state) => state.addItem);
+  
   const categoryName = product?.category?.name || product?.categories?.name || 'COLLECTION';
   
+  // Split name for archival look (First word light, rest bold)
+  const nameParts = product.name.split(' ');
+  const firstWord = nameParts[0];
+  const restOfName = nameParts.slice(1).join(' ');
+
+  const handleAddToCart = () => {
+    if (!selectedSize && product.sizes?.length > 0) {
+      alert('Please select a size');
+      return;
+    }
+    
+    // Add to cart (existing store logic adds 1 at a time)
+    for (let i = 0; i < quantity; i++) {
+        addItem(product, selectedSize || 'One Size');
+    }
+  };
+
   return (
-    <div className="flex flex-col pt-4">
-      <div className="text-[10px] font-bold text-[#D97706] tracking-[0.2em] uppercase mb-3">
-        {product.gender} &gt; {categoryName}
+    <div className="flex flex-col">
+      {/* Category / Gender Label */}
+      <div className="flex items-center gap-2 text-[9px] font-black text-[#D97706] tracking-[0.3em] uppercase mb-6">
+        <span>{product.gender}</span>
+        <ChevronRight size={8} />
+        <span>{categoryName}</span>
       </div>
-      <h1 className="text-4xl md:text-5xl font-heading font-black text-gray-900 tracking-tight mb-4">
-        {product.name}
+
+      {/* Product Title */}
+      <h1 className="text-4xl md:text-5xl lg:text-6xl tracking-tighter uppercase leading-none text-[#1A1614] mb-8">
+        <span className="font-light block sm:inline">{firstWord}</span> <span className="font-extrabold">{restOfName}</span>
       </h1>
       
-      <div className="flex items-center gap-4 mb-6">
-        <span className={`text-2xl font-bold font-heading ${product.offer_price ? 'text-gray-400 line-through text-xl' : 'text-[#D97706]'}`}>
-          ₹{product.price}
+      {/* Price Section */}
+      <div className="flex items-baseline gap-4 mb-10 border-b border-gray-100 pb-8">
+        <span className={cn(
+          "text-2xl font-bold tracking-tight",
+          product.offer_price ? "text-gray-300 line-through text-lg" : "text-[#1A1614]"
+        )}>
+          ₹{Number(product.price).toLocaleString()}
         </span>
         {product.offer_price && (
-          <span className="text-2xl font-bold text-[#D97706] font-heading">
-            ₹{product.offer_price}
+          <span className="text-3xl font-black text-[#D97706] tracking-tight">
+            ₹{Number(product.offer_price).toLocaleString()}
           </span>
         )}
-        <span className="bg-orange-50 text-[#D97706] text-[10px] font-bold tracking-widest uppercase px-3 py-1 rounded-sm">
-          {product.stock > 0 ? 'IN STOCK' : 'OUT OF STOCK'}
-        </span>
+        {product.stock <= 5 && product.stock > 0 && (
+          <span className="ml-auto text-[9px] font-black tracking-widest text-red-500 uppercase bg-red-50 px-2 py-1">
+            Only {product.stock} left
+          </span>
+        )}
       </div>
 
-      <p className="text-gray-500 text-sm leading-relaxed mb-10">
-        {product.description || "An elevated piece crafted with premium materials. Features subtle details and timeless appeal."}
-      </p>
+      {/* Description */}
+      <div className="mb-12">
+        <h3 className="text-[10px] font-black tracking-[0.2em] uppercase text-gray-400 mb-4">Description</h3>
+        <p className="text-[#1A1614] text-xs font-medium leading-relaxed max-w-lg">
+          {product.description || "A masterfully crafted piece designed for the modern wardrobe. Features premium fabrication and a silhouette that balances timeless appeal with contemporary precision."}
+        </p>
+      </div>
 
-      {/* Select Size */}
-      <div className="mb-8">
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-gray-900">SELECT SIZE</span>
-          <span className="text-[10px] font-bold text-[#D97706] tracking-widest uppercase cursor-pointer hover:underline border-b border-[#D97706]/30 pb-0.5">Size Guide</span>
+      {/* Size Selection */}
+      <div className="mb-10">
+        <div className="flex justify-between items-center mb-5">
+          <h3 className="text-[10px] font-black tracking-[0.2em] uppercase text-[#1A1614]">Select Size</h3>
+          <button className="text-[9px] font-bold text-gray-400 hover:text-black uppercase tracking-widest transition-colors underline underline-offset-4">
+            Size Guide
+          </button>
         </div>
-        <div className="flex gap-3 flex-wrap">
-          {product.sizes?.length > 0 ? product.sizes.map((size: string, index: number) => (
+        
+        <div className="flex gap-2.5 flex-wrap">
+          {product.sizes?.length > 0 ? product.sizes.map((size: string) => (
             <button 
               key={size}
-              className={`w-12 h-12 rounded-full border text-[10px] font-bold flex items-center justify-center transition-all 
-                ${index === 0 
-                  ? 'bg-black border-black text-white shadow-md' 
-                  : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400'
-                }`}
+              onClick={() => setSelectedSize(size)}
+              className={cn(
+                "w-14 h-14 text-[11px] font-black uppercase tracking-widest transition-all duration-300",
+                selectedSize === size 
+                  ? "bg-[#1A1614] text-white" 
+                  : "bg-white border border-gray-100 text-[#1A1614] hover:border-black"
+              )}
             >
               {size}
             </button>
           )) : (
-            <span className="text-xs text-gray-400 uppercase tracking-widest font-bold border border-gray-200 px-4 py-2 rounded-lg">One Size</span>
+            <button className="px-6 h-14 bg-[#1A1614] text-white text-[11px] font-black uppercase tracking-widest">
+              ONE SIZE
+            </button>
           )}
         </div>
       </div>
 
-      {/* Add to Cart Area */}
-      <div className="flex gap-4 mb-10">
-        <div className="flex items-center border border-gray-200 rounded-full h-14 px-4 bg-white">
-          <button className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-colors">-</button>
-          <span className="w-8 text-center font-bold text-sm">1</span>
-          <button className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 transition-colors">+</button>
+      {/* Quantity & Add to Cart */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-12">
+        <div className="flex items-center bg-gray-50 h-16 px-6 sm:w-40 justify-between">
+          <button 
+            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            className="text-lg text-gray-400 hover:text-black transition-colors px-2"
+          >
+            −
+          </button>
+          <span className="text-sm font-black w-8 text-center">{quantity}</span>
+          <button 
+            onClick={() => setQuantity(quantity + 1)}
+            className="text-lg text-gray-400 hover:text-black transition-colors px-2"
+          >
+            +
+          </button>
         </div>
-        <button className="flex-1 bg-[#D97706] text-white rounded-full h-14 flex items-center justify-center gap-3 hover:bg-[#B45309] transition-all duration-300 shadow-xl shadow-orange-900/10 hover:shadow-orange-900/20 active:scale-95">
-          <ShoppingCart className="w-5 h-5" />
-          <span className="text-xs font-bold tracking-widest uppercase">Add to Cart</span>
+
+        <button 
+          onClick={handleAddToCart}
+          disabled={product.stock === 0}
+          className={cn(
+            "flex-1 h-16 flex items-center justify-center gap-4 transition-all duration-500 group relative overflow-hidden",
+            product.stock === 0 
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+              : "bg-[#1A1614] text-white hover:bg-black active:scale-[0.98]"
+          )}
+        >
+          <ShoppingBag size={18} className="group-hover:scale-110 transition-transform" />
+          <span className="text-[11px] font-black uppercase tracking-[0.2em]">
+            {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+          </span>
         </button>
       </div>
 
-      {/* Shipping Info */}
-      <div className="flex flex-col gap-4 pt-8 border-t border-gray-100">
-        <div className="flex items-center gap-3 text-sm text-gray-600">
-           <Truck className="w-5 h-5 text-[#D97706]" />
-           <span className="font-medium text-xs font-bold uppercase tracking-widest">Free shipping on ₹2000+</span>
+      {/* Benefits / Info */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-gray-100 border border-gray-100">
+        <div className="bg-white p-6 flex items-start gap-4">
+          <Truck size={20} className="text-[#D97706] mt-0.5" />
+          <div>
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-[#1A1614] mb-1">Shipping</h4>
+            <p className="text-[10px] font-medium text-gray-400 uppercase leading-normal">Express delivery available on all archival pieces.</p>
+          </div>
         </div>
-        <div className="flex items-center gap-3 text-sm text-gray-600">
-           <RotateCcw className="w-5 h-5 text-[#D97706]" />
-           <span className="font-medium text-xs font-bold uppercase tracking-widest">30-day easy returns</span>
+        <div className="bg-white p-6 flex items-start gap-4">
+          <RotateCcw size={20} className="text-[#D97706] mt-0.5" />
+          <div>
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-[#1A1614] mb-1">Returns</h4>
+            <p className="text-[10px] font-medium text-gray-400 uppercase leading-normal">30-day effortless returns policy.</p>
+          </div>
         </div>
       </div>
     </div>

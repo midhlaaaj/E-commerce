@@ -5,7 +5,9 @@ import { ProductInfo } from '@/components/product/ProductInfo';
 import { ProductReviews } from '@/components/product/ProductReviews';
 import { RelatedProducts } from '@/components/product/RelatedProducts';
 import { VisitTracker } from '@/components/product/VisitTracker';
+import { ProductBreadcrumb } from '@/components/product/ProductBreadcrumb';
 import { createClient } from '@/lib/supabaseServer';
+import { getReviews } from '@/lib/actions/reviews';
 import { notFound } from 'next/navigation';
 
 export const revalidate = 0; // Ensures data is always fresh
@@ -26,6 +28,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     notFound();
   }
 
+  // Fetch product reviews
+  const reviews = await getReviews(product.id);
+
   // Fetch closely related products (same gender) omitting current product
   const { data: relatedProducts } = await supabase
     .from('products')
@@ -38,18 +43,21 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     <main className="min-h-screen bg-white">
       <Navbar />
       
-      <div className="bg-[#FAF9F6]">
-        <div className="max-w-7xl mx-auto px-6 py-12 lg:py-16">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
-             <ProductGallery images={product.images || []} />
+      {/* Dynamic Navigation */}
+      <ProductBreadcrumb gender={product.gender} />
+
+      <div className="bg-white">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 pb-24">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-24 items-start">
+             <ProductGallery images={product.images || []} product={product} />
              <ProductInfo product={product} />
           </div>
         </div>
       </div>
 
-      <div className="bg-[#FAF9F6] pb-24 border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-6">
-          <ProductReviews />
+      <div className="bg-white pb-24 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <ProductReviews productId={product.id} reviews={reviews} />
           <RelatedProducts products={relatedProducts || []} />
         </div>
       </div>

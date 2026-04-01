@@ -66,7 +66,7 @@ export const ProductCard = ({ product, badge, variant = 'default' }: ProductCard
   return (
     <div className="group block h-full">
       <div className={cn(
-        "relative aspect-[4/5] overflow-hidden bg-[#F8F9FA] mb-4 transition-all duration-700",
+        "relative aspect-[3/4] overflow-hidden bg-[#F8F9FA] mb-4 transition-all duration-700",
         variant === 'rounded' ? "rounded-3xl" : "rounded-sm"
       )}>
         <Link href={`/product/${product.id}`} className="block h-full w-full">
