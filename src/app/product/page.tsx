@@ -26,18 +26,25 @@ export default function ProductPage() {
     <main className="min-h-screen bg-white">
       <Navbar />
       
-      <div className="bg-[#FAF9F6]">
-        <div className="max-w-7xl mx-auto px-6 py-12 lg:py-16">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
-             <ProductGallery images={sampleProduct.images} />
+      {/* Dynamic Navigation */}
+      <div className="max-w-7xl mx-auto px-6 md:px-12 pt-28 pb-8">
+        <button className="flex items-center gap-3 text-[9px] font-bold uppercase tracking-[0.3em] text-gray-400">
+          BACK TO HOME
+        </button>
+      </div>
+
+      <div className="bg-white">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 pb-24">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-24 items-start">
+             <ProductGallery images={sampleProduct.images} product={sampleProduct} />
              <ProductInfo product={sampleProduct} />
           </div>
         </div>
       </div>
 
-      <div className="bg-[#FAF9F6] pb-24">
-        <div className="max-w-7xl mx-auto px-6">
-          <ProductReviews />
+      <div className="bg-white pb-24 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <ProductReviews productId={sampleProduct.id} reviews={[]} />
           <RelatedProducts />
         </div>
       </div>
