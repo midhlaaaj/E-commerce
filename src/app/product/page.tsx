@@ -4,7 +4,6 @@ import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductInfo } from '@/components/product/ProductInfo';
 import { ProductReviews } from '@/components/product/ProductReviews';
 import { RelatedProducts } from '@/components/product/RelatedProducts';
-import { Newsletter } from '@/components/sections/Newsletter';
 
 export default function ProductPage() {
   const sampleProduct = {

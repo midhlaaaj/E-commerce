@@ -1,11 +1,9 @@
-import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { MenHero } from '@/components/sections/MenHero';
 import { MenCategories } from '@/components/sections/MenCategories';
 import { MenProducts } from '@/components/sections/MenProducts';
 import { NewArrivals } from '@/components/sections/NewArrivals';
 import { OnSaleProducts } from '@/components/sections/OnSaleProducts';
-import { Newsletter } from '@/components/sections/Newsletter';
 import { createClient } from '@/lib/supabaseServer';
 
 export default async function MenPage() {
@@ -16,7 +14,7 @@ export default async function MenPage() {
     supabase.from('homepage_content').select('*').eq('section_key', 'men_hero').single(),
     supabase.from('categories').select('*').eq('gender', 'men').order('created_at', { ascending: false }),
     supabase.from('products').select('*').eq('gender', 'men').order('created_at', { ascending: false }).limit(4),
-    supabase.from('products').select('*').eq('gender', 'men').eq('is_sale', true).limit(4),
+    supabase.from('products').select('*').eq('gender', 'men').not('offer_price', 'is', null).limit(4),
     supabase.from('products').select('*').eq('gender', 'men').limit(8)
   ]);
 
@@ -28,13 +26,11 @@ export default async function MenPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <Navbar transparent />
       <MenHero initialData={heroData} />
       <MenCategories initialData={categoriesData} />
-      <NewArrivals initialData={newArrivalsData} />
-      <OnSaleProducts initialData={saleData} />
+      <NewArrivals initialData={newArrivalsData} gender="men" />
+      <OnSaleProducts initialData={saleData} gender="men" />
       <MenProducts initialData={selectionData} />
-      <Newsletter />
       <Footer />
     </main>
   );

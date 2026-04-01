@@ -32,7 +32,7 @@ export const KidsCategories = ({ initialData = [] }: KidsCategoriesProps) => {
         {categories.map((cat, i) => (
           <Link 
             key={i} 
-            href={`/category/${cat.name.toLowerCase().replace(/\s+/g, '-')}?gender=kids`}
+            href={`/kids/${cat.name.toLowerCase().replace(/\s+/g, '-')}`}
             className="group relative aspect-[4/5] overflow-hidden rounded-xl cursor-pointer bg-gray-50 bg-white shadow-sm hover:shadow-xl transition-all duration-500"
           >
             <Image 
@@ -46,9 +46,6 @@ export const KidsCategories = ({ initialData = [] }: KidsCategoriesProps) => {
               <h3 className="text-white font-extrabold text-2xl tracking-tighter uppercase mb-2 translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
                 {cat.name}
               </h3>
-            </div>
-            <div className="absolute top-6 right-6 w-12 h-12 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-y-4 group-hover:translate-y-0 transition-all duration-500">
-              <span className="text-white text-xl">→</span>
             </div>
           </Link>
         ))}

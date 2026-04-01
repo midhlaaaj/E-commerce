@@ -85,7 +85,7 @@ export const ProductCard = ({ product, badge, variant = 'default' }: ProductCard
             {badge}
           </div>
         )}
-        {product.is_sale && !badge && (
+        {(product.is_sale || (product.offer_price && product.offer_price < product.price)) && !badge && (
           <div className="absolute top-4 left-4 px-3 py-1 bg-[#D97706] text-white text-[9px] font-black uppercase tracking-widest shadow-sm z-10">
             SALE
           </div>

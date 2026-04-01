@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabaseServer';
 import { notFound } from 'next/navigation';
 import CollectionClient from '@/components/collection/CollectionClient';
-import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 
 interface Props {
@@ -34,7 +33,6 @@ export default async function CollectionPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-white font-body selection:bg-black selection:text-white">
-      <Navbar />
       <CollectionClient gender={gender} initialProducts={products || []} />
       <Footer />
     </main>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   ChevronLeft, 
@@ -31,20 +31,79 @@ interface Product {
 }
 
 interface CollectionClientProps {
-  gender: string;
+  gender?: string;
   initialProducts: Product[];
+  title1?: string;
+  title2?: string;
+  subtitle?: string;
+  backLink?: string;
+  backLabel?: string;
 }
 
-export default function CollectionClient({ gender, initialProducts }: CollectionClientProps) {
+export default function CollectionClient({ 
+  gender, 
+  initialProducts,
+  title1,
+  title2,
+  subtitle,
+  backLink,
+  backLabel
+}: CollectionClientProps) {
   const router = useRouter();
   const [products] = useState<Product[]>(initialProducts);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
   const [sortBy, setSortBy] = useState('newest');
+  const sortRef = useRef<HTMLDivElement>(null);
   
+  // Dynamic Price Range Calculation based on actual products
+  const { minAvailablePrice, maxAvailablePrice } = useMemo(() => {
+    if (products.length === 0) return { minAvailablePrice: 0, maxAvailablePrice: 50000 };
+    
+    let min = Infinity;
+    let max = -Infinity;
+    
+    products.forEach(p => {
+      const price = p.offer_price || p.price;
+      if (price < min) min = price;
+      if (price > max) max = price;
+    });
+    
+    return { 
+      minAvailablePrice: Math.floor(min / 100) * 100, // Round down to nearest 100
+      maxAvailablePrice: Math.ceil(max / 100) * 100   // Round up to nearest 100
+    };
+  }, [products]);
+
   // Filter States
   const [priceRange, setPriceRange] = useState({ min: 0, max: 50000 });
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [colorSearch, setColorSearch] = useState('');
+
+  // Update price range when min/max price bounds change (e.g. category switch)
+  useEffect(() => {
+    setPriceRange({ min: minAvailablePrice, max: maxAvailablePrice });
+  }, [minAvailablePrice, maxAvailablePrice]);
+
+  // Click outside to close sort dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+        setIsSortOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const sortOptions = [
+    { value: 'newest', label: "What's New" },
+    { value: 'price-low', label: 'Price Low' },
+    { value: 'price-high', label: 'Price High' },
+    { value: 'rating', label: 'Rating' }
+  ];
+
+  const currentSortLabel = sortOptions.find(opt => opt.value === sortBy)?.label || "Sort By";
 
   // Extract all unique colors from products for the filter list
   const availableColors = useMemo(() => {
@@ -94,67 +153,83 @@ export default function CollectionClient({ gender, initialProducts }: Collection
 
   const clearFilters = () => {
     setSelectedColors([]);
-    setPriceRange({ min: 0, max: 50000 });
+    setPriceRange({ min: minAvailablePrice, max: maxAvailablePrice });
   };
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header & Sticky Controls */}
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-50 pt-32 pb-4 px-6 md:px-12">
-        <div className="max-w-7xl mx-auto">
-          {/* Breadcrumb / Back */}
-          <button 
-            onClick={() => router.push(`/${gender}`)}
-            className="group flex items-center gap-3 text-[9px] font-bold uppercase tracking-[0.3em] text-gray-400 hover:text-black transition-all mb-8"
-          >
-            <ChevronLeft size={12} className="group-hover:-translate-x-1 transition-transform" />
-            BACK TO {gender}
-          </button>
+      <div className="max-w-7xl mx-auto px-6 md:px-12 pt-28">
+        {/* Breadcrumb / Back */}
+        <button 
+          onClick={() => router.push(backLink || `/${gender}`)}
+          className="group flex items-center gap-3 text-[9px] font-bold uppercase tracking-[0.3em] text-gray-400 hover:text-black transition-all mb-6"
+        >
+          <ChevronLeft size={12} className="group-hover:-translate-x-1 transition-transform" />
+          {backLabel || (backLink ? 'BACK' : `BACK TO ${gender}`)}
+        </button>
 
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <div className="space-y-2">
-              <h1 className="text-4xl sm:text-5xl tracking-tighter uppercase leading-none text-[#1A1614]">
-                <span className="font-light">{gender}'S</span> <span className="font-extrabold">PIECES</span>
-              </h1>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.4em] flex items-center gap-4">
-                <span className="w-8 h-px bg-gray-200"></span>
-                THE ARCHIVE / 2024
-              </p>
-            </div>
+        {/* Header (Matching NewArrivals style) */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-6">
+          <div className="space-y-1">
+            <h1 className="text-4xl sm:text-5xl tracking-tighter uppercase leading-none text-[#1A1614]">
+              <span className="font-light">{title1 || `${gender}'S`}</span> <span className="font-extrabold">{title2 || (gender === 'kids' ? 'COLLECTION' : 'PIECES')}</span>
+            </h1>
+            <p className="text-[10px] font-medium text-gray-400 uppercase tracking-[0.4em]">
+              {subtitle || `Showing ${filteredProducts.length} unique pieces`}
+            </p>
+          </div>
 
-            <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className={cn(
+                "flex items-center gap-2 px-8 py-3 border text-[10px] font-bold uppercase tracking-widest transition-all rounded-none",
+                isFilterOpen ? "bg-[#1A1614] text-white border-[#1A1614]" : "bg-white text-[#1A1614] border-gray-100 hover:border-black"
+              )}
+            >
+              <SlidersHorizontal size={14} />
+              Filters {selectedColors.length > 0 ? `(${selectedColors.length})` : ''}
+            </button>
+
+            <div className="relative" ref={sortRef}>
               <button 
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className={cn(
-                  "flex items-center gap-3 px-8 py-4 border text-[10px] font-black uppercase tracking-[0.2em] transition-all rounded-none",
-                  isFilterOpen ? "bg-[#1A1614] text-white border-[#1A1614]" : "bg-white text-[#1A1614] border-gray-200 hover:border-black"
-                )}
+                onClick={() => setIsSortOpen(!isSortOpen)}
+                className="flex items-center justify-between gap-8 px-8 py-3 border border-gray-100 hover:border-black bg-white text-[10px] font-bold uppercase tracking-widest transition-all rounded-none min-w-[180px]"
               >
-                <SlidersHorizontal size={14} />
-                FILTERS {selectedColors.length > 0 ? `(${selectedColors.length})` : ''}
+                <span>{currentSortLabel}</span>
+                <ChevronDown size={14} className={cn("transition-transform duration-300", isSortOpen && "rotate-180")} />
               </button>
 
-              <div className="relative group">
-                <select 
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="appearance-none bg-white border border-gray-200 hover:border-black rounded-none px-10 py-4 text-[10px] font-black uppercase tracking-[0.2em] cursor-pointer transition-all outline-none"
-                >
-                  <option value="newest">What's New</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="rating">Customer Rating</option>
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                  <ChevronDown size={14} />
+              {isSortOpen && (
+                <div className="absolute top-full right-0 mt-1 w-full bg-white border border-gray-100 shadow-xl z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="py-1">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setSortBy(option.value);
+                          setIsSortOpen(false);
+                        }}
+                        className={cn(
+                          "w-full text-left px-8 py-3 text-[9px] font-bold uppercase tracking-widest transition-colors",
+                          sortBy === option.value ? "bg-gray-50 text-black" : "text-gray-400 hover:bg-gray-50 hover:text-black"
+                        )}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
+
+        <div className="flex gap-12">
+        </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-12 flex gap-12">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 pb-16 flex gap-12">
         {/* Sidebar Filters (Desktop) */}
         <aside className={cn(
           "w-72 flex-shrink-0 space-y-12 transition-all duration-500",
@@ -163,15 +238,15 @@ export default function CollectionClient({ gender, initialProducts }: Collection
           <div className="space-y-6">
             <div className="flex items-center justify-between border-b border-gray-100 pb-4">
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1A1614]">Price Range</h3>
-              {(priceRange.min > 0 || priceRange.max < 50000) && (
-                 <button onClick={() => setPriceRange({ min: 0, max: 50000 })} className="text-[9px] font-bold text-[#D97706] hover:underline uppercase tracking-widest">Reset</button>
+              {(priceRange.min > minAvailablePrice || priceRange.max < maxAvailablePrice) && (
+                 <button onClick={() => setPriceRange({ min: minAvailablePrice, max: maxAvailablePrice })} className="text-[9px] font-bold text-[#D97706] hover:underline uppercase tracking-widest">Reset</button>
               )}
             </div>
             <PriceRangeSlider 
-              min={0} 
-              max={50000} 
-              initialMin={priceRange.min}
-              initialMax={priceRange.max}
+              min={minAvailablePrice} 
+              max={maxAvailablePrice} 
+              valueMin={priceRange.min}
+              valueMax={priceRange.max}
               onChange={(min, max) => setPriceRange({ min, max })} 
             />
           </div>
@@ -223,12 +298,6 @@ export default function CollectionClient({ gender, initialProducts }: Collection
 
         {/* Product Grid */}
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-8">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-              Showing {filteredProducts.length} unique pieces
-            </p>
-          </div>
-
           {filteredProducts.length > 0 ? (
             <div className={cn(
               "grid gap-x-6 gap-y-12 transition-all duration-500",

@@ -7,9 +7,10 @@ import { ProductCard } from '@/components/product/ProductCard';
 
 interface NewArrivalsProps {
   initialData?: any[];
+  gender?: string;
 }
 
-export const NewArrivals = ({ initialData = [] }: NewArrivalsProps) => {
+export const NewArrivals = ({ initialData = [], gender }: NewArrivalsProps) => {
   const [products] = useState(initialData);
 
   if (products.length === 0) return null;
@@ -21,7 +22,7 @@ export const NewArrivals = ({ initialData = [] }: NewArrivalsProps) => {
         title2="ARRIVALS" 
         subtitle="CURATED FOR THE ARCHIVE" 
         ctaText="VIEW ALL" 
-        ctaLink="/new-arrivals"
+        ctaLink={gender ? `/${gender}/new-arrivals` : "/new-arrivals"}
         icon={<ArrowRight size={14} />}
       />
 

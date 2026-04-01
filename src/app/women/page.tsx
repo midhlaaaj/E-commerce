@@ -1,11 +1,9 @@
-import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { WomenHero } from '@/components/sections/WomenHero';
 import { WomenCategories } from '@/components/sections/WomenCategories';
 import { WomenProducts } from '@/components/sections/WomenProducts';
 import { NewArrivals } from '@/components/sections/NewArrivals';
 import { OnSaleProducts } from '@/components/sections/OnSaleProducts';
-import { Newsletter } from '@/components/sections/Newsletter';
 import { createClient } from '@/lib/supabaseServer';
 
 export default async function WomenPage() {
@@ -16,7 +14,7 @@ export default async function WomenPage() {
     supabase.from('homepage_content').select('*').eq('section_key', 'women_hero').single(),
     supabase.from('categories').select('*').eq('gender', 'women').order('created_at', { ascending: false }),
     supabase.from('products').select('*').eq('gender', 'women').order('created_at', { ascending: false }).limit(4),
-    supabase.from('products').select('*').eq('gender', 'women').eq('is_sale', true).limit(4),
+    supabase.from('products').select('*').eq('gender', 'women').not('offer_price', 'is', null).limit(4),
     supabase.from('products').select('*').eq('gender', 'women').limit(8)
   ]);
 
@@ -28,13 +26,11 @@ export default async function WomenPage() {
 
   return (
     <main className="min-h-screen bg-white">
-      <Navbar transparent />
       <WomenHero initialData={heroData} />
       <WomenCategories initialData={categoriesData} />
-      <NewArrivals initialData={newArrivalsData} />
-      <OnSaleProducts initialData={saleData} />
+      <NewArrivals initialData={newArrivalsData} gender="women" />
+      <OnSaleProducts initialData={saleData} gender="women" />
       <WomenProducts initialData={selectionData} />
-      <Newsletter />
       <Footer />
     </main>
   );

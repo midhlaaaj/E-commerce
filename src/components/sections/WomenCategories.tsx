@@ -1,5 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { SectionHeader } from '@/components/layout/SectionHeader';
 
 interface WomenCategoriesProps {
   initialData?: any[];
@@ -22,17 +24,21 @@ export const WomenCategories = ({ initialData = [] }: WomenCategoriesProps) => {
   ];
 
   return (
-    <section className="py-20 px-6 max-w-7xl mx-auto">
-      <div className="mb-12">
-        <span className="text-[10px] font-bold text-[#D97706] tracking-[0.2em] uppercase mb-2 block">CURATED SELECTION</span>
-        <h2 className="text-3xl font-extrabold tracking-tight uppercase">SHOP BY CATEGORY</h2>
-      </div>
+    <section className="py-12 px-6 max-w-7xl mx-auto">
+      <SectionHeader 
+        title1="SHOP BY" 
+        title2="CATEGORY" 
+        subtitle="CURATED SELECTION"
+        ctaText="EXPLORE ALL"
+        ctaLink="/women"
+        icon={<ArrowRight size={14} />}
+      />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {categories.map((cat, i) => (
           <Link 
             key={i} 
-            href={`/category/${cat.name.toLowerCase().replace(/\s+/g, '-')}?gender=women`}
+            href={`/women/${cat.name.toLowerCase().replace(/\s+/g, '-')}`}
             className="group relative aspect-[4/5] overflow-hidden rounded-xl cursor-pointer bg-gray-50 bg-white shadow-sm hover:shadow-xl transition-all duration-500"
           >
             <Image 
@@ -46,9 +52,6 @@ export const WomenCategories = ({ initialData = [] }: WomenCategoriesProps) => {
               <h3 className="text-white font-extrabold text-2xl tracking-tighter uppercase mb-2 translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
                 {cat.name}
               </h3>
-            </div>
-            <div className="absolute top-6 right-6 w-12 h-12 bg-white/10 backdrop-blur-xl border border-white/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 -translate-y-4 group-hover:translate-y-0 transition-all duration-500">
-              <span className="text-white text-xl">→</span>
             </div>
           </Link>
         ))}

@@ -38,7 +38,7 @@ export const KidsProducts = ({ initialData = [] }: KidsProductsProps) => {
 
       <div className="flex justify-center">
         <Link 
-          href="/collections/kids" 
+          href="/kids/collection" 
           className="group flex items-center gap-4 text-[10px] font-extrabold tracking-[0.3em] uppercase transition-all"
         >
           <span className="border-b-2 border-black pb-1 group-hover:text-gray-500 group-hover:border-gray-300">

@@ -1,7 +1,19 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Facebook, Instagram, Twitter, Youtube } from 'lucide-react';
 
 export const Footer = () => {
+  const pathname = usePathname();
+  const [isAdminPath, setIsAdminPath] = useState(false);
+
+  useEffect(() => {
+    setIsAdminPath(pathname?.startsWith('/admin'));
+  }, [pathname]);
+
+  if (isAdminPath) return null;
   return (
     <footer className="bg-[#F9FAFB] pt-20 pb-10 px-6 border-t border-gray-100">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20">

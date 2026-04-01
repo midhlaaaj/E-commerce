@@ -1,4 +1,3 @@
-import { Navbar } from '@/components/layout/Navbar';
 import { Hero } from '@/components/sections/Hero';
 import { Categories } from '@/components/sections/Categories';
 import { NewArrivals } from '@/components/sections/NewArrivals';
@@ -23,7 +22,7 @@ export default async function Home() {
     supabase.from('products').select('*').eq('is_featured', true).limit(4),
     supabase.from('products').select('*').order('created_at', { ascending: false }).limit(4),
     supabase.from('homepage_content').select('*').eq('section_key', 'editorial_quote').single(),
-    supabase.from('products').select('*').eq('is_sale', true).limit(4)
+    supabase.from('products').select('*').not('offer_price', 'is', null).limit(4)
   ]);
 
   const heroData = heroResponse.data;
@@ -35,7 +34,6 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-white">
-      <Navbar transparent />
       <Hero initialData={heroData} />
       <Categories initialData={genderCardsData} />
       <NewArrivals initialData={newArrivalsData} />

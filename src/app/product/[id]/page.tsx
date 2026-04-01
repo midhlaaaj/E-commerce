@@ -4,7 +4,6 @@ import { ProductGallery } from '@/components/product/ProductGallery';
 import { ProductInfo } from '@/components/product/ProductInfo';
 import { ProductReviews } from '@/components/product/ProductReviews';
 import { RelatedProducts } from '@/components/product/RelatedProducts';
-import { Newsletter } from '@/components/sections/Newsletter';
 import { VisitTracker } from '@/components/product/VisitTracker';
 import { createClient } from '@/lib/supabaseServer';
 import { notFound } from 'next/navigation';
@@ -56,7 +55,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       </div>
 
       <VisitTracker productId={product.id} />
-      <Newsletter />
       <Footer />
     </main>
   );

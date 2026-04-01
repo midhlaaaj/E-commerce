@@ -17,9 +17,10 @@ interface Product {
 
 interface OnSaleProductsProps {
   initialData?: Product[];
+  gender?: string;
 }
 
-export const OnSaleProducts = ({ initialData = [] }: OnSaleProductsProps) => {
+export const OnSaleProducts = ({ initialData = [], gender }: OnSaleProductsProps) => {
   const [products] = useState(initialData);
 
   if (products.length === 0) return null;
@@ -29,9 +30,9 @@ export const OnSaleProducts = ({ initialData = [] }: OnSaleProductsProps) => {
       <SectionHeader 
         title1="ON" 
         title2="SALE" 
-        subtitle="LIMITED TIME MARKDOWNS" 
+        subtitle="EXCLUSIVE ARCHIVE REDUCTIONS" 
         ctaText="VIEW ALL" 
-        ctaLink="/sale"
+        ctaLink={gender ? `/${gender}/sale` : "/sale"}
         icon={<ArrowRight size={14} />}
       />
 
