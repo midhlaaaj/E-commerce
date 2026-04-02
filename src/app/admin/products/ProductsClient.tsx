@@ -13,9 +13,12 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
-  Package
+  Package,
+  Image as ImageIcon,
+  X
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { uploadImage } from '@/lib/storage';
 
 interface Category {
   id: string;
@@ -58,11 +61,20 @@ export default function ProductsClient({
   forcedCategoryId 
 }: ProductsClientProps) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [categories] = useState<Category[]>(initialCategories);
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
   const [selectedGender, setSelectedGender] = useState<'men' | 'women' | 'kids' | string | null>(forcedGender || null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(forcedCategoryId || null);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
+  
+  // Category management states
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [newCategory, setNewCategory] = useState({ name: '', gender: 'men' as 'men' | 'women' | 'kids' });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  
   const router = useRouter();
 
   async function fetchProducts() {
@@ -88,6 +100,107 @@ export default function ProductsClient({
       console.error('Error fetching products:', err);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchCategories() {
+    try {
+      const { data, error } = await adminSupabase
+        .from('categories')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setCategories(data || []);
+      router.refresh();
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+    }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  async function handleAddCategory() {
+    if (!newCategory.name || !selectedFile) return;
+    setSaving(true);
+
+    const targetGender = selectedGender || newCategory.gender;
+    
+    try {
+      const imageUrl = await uploadImage(selectedFile!, 'categories');
+      const { error } = await adminSupabase
+        .from('categories')
+        .insert([{
+          name: newCategory.name,
+          gender: targetGender,
+          image_url: imageUrl
+        }]);
+      
+      if (error) throw error;
+      
+      setNewCategory({ name: '', gender: 'men' });
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setIsAddingCategory(false);
+      fetchCategories();
+    } catch (err: any) {
+      alert(`Error adding category: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleUpdateCategory() {
+    if (!editingCategory || !editingCategory.name) return;
+    setSaving(true);
+
+    try {
+      let imageUrl = editingCategory.image_url;
+      if (selectedFile) {
+        imageUrl = await uploadImage(selectedFile, 'categories');
+      }
+
+      const { error } = await adminSupabase
+        .from('categories')
+        .update({
+          name: editingCategory.name,
+          gender: editingCategory.gender,
+          image_url: imageUrl
+        })
+        .match({ id: editingCategory.id });
+      
+      if (error) throw error;
+      
+      setEditingCategory(null);
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      fetchCategories();
+    } catch (err: any) {
+      alert(`Error updating category: ${err.message}`);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDeleteCategory(id: string) {
+    if (!confirm('Are you sure you want to delete this category? All products in this category will become unreachable through hierarchy. Proceed?')) return;
+    try {
+      const { error } = await adminSupabase
+        .from('categories')
+        .delete()
+        .match({ id });
+      
+      if (error) throw error;
+      fetchCategories();
+    } catch (err) {
+      console.error('Error deleting category:', err);
     }
   }
 
@@ -195,88 +308,235 @@ export default function ProductsClient({
         {/* Actions - Only visible at Category or Product level */}
         {selectedGender && (
           <div className="flex items-center gap-4">
-             <Link 
-              href={`/admin/products/add?gender=${selectedGender}${selectedCategoryId ? `&category_id=${selectedCategoryId}` : ''}`}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-xl shadow-black/10 active:scale-95"
-            >
-              <Plus size={18} />
-              Add Product
-            </Link>
+            {!selectedCategoryId ? (
+              <button 
+                onClick={() => setIsAddingCategory(!isAddingCategory)}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-xl shadow-black/10 active:scale-95"
+              >
+                {isAddingCategory ? <X size={18} /> : <Plus size={18} />}
+                {isAddingCategory ? 'Cancel' : 'Add Category'}
+              </button>
+            ) : (
+              <Link 
+                href={`/admin/products/add?gender=${selectedGender}${selectedCategoryId ? `&category_id=${selectedCategoryId}` : ''}`}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-black text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-xl shadow-black/10 active:scale-95"
+              >
+                <Plus size={18} />
+                Add Product
+              </Link>
+            )}
           </div>
         )}
       </div>
 
       {!selectedGender ? (
         /* STAGE 1: GENDER SELECTION */
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
           {(['men', 'women', 'kids'] as const).map((gender) => {
             const count = products.filter(p => p.gender === gender).length;
             return (
-              <button 
-                key={gender}
-                onClick={() => router.push(`/admin/products/${gender}`)}
-                className="group relative h-[500px] overflow-hidden rounded-3xl cursor-pointer text-left bg-white shadow-xl shadow-black/5 hover:shadow-black/15 transition-all duration-700 active:scale-95"
-              >
-                <img 
-                  src={getHeroImage(gender)} 
-                  alt={gender} 
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 brightness-[0.8]"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                <div className="absolute bottom-10 left-10 text-white">
-                  <span className="text-[10px] font-bold text-[#D97706] tracking-[0.4em] uppercase mb-2 block">MANAGE COLLECTION</span>
-                  <h2 className="text-4xl font-extrabold tracking-tighter uppercase mb-4">{gender}</h2>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
-                      <span className="font-bold">{count}</span>
-                    </div>
-                    <span className="text-xs font-bold uppercase tracking-widest text-white/50">Total Pieces</span>
+              <div key={gender} className="group block">
+                <button 
+                  onClick={() => router.push(`/admin/products/${gender}`)}
+                  className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl cursor-pointer bg-white shadow-xl shadow-black/5 hover:shadow-black/15 transition-all duration-700 active:scale-95 mb-4"
+                >
+                  <img 
+                    src={getHeroImage(gender)} 
+                    alt={gender} 
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all duration-500" />
+                </button>
+                
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-gray-900 uppercase tracking-[0.2em] transition-colors group-hover:text-[#D97706]">
+                    {gender} Collection
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{count} Pieces</span>
                   </div>
                 </div>
-              </button>
+              </div>
             )
           })}
         </div>
       ) : !selectedCategoryId ? (
         /* STAGE 2: CATEGORY SELECTION */
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+           {/* Add Category Form */}
+           {isAddingCategory && (
+            <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-xl">
+              <h3 className="font-bold text-lg mb-6 tracking-tight">Create New <span className="text-[#D97706] italic uppercase">{selectedGender}'s</span> Category</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Category Name</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. Linen Essentials"
+                    className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#D97706] transition-all"
+                    value={newCategory.name}
+                    onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2 col-span-1 lg:col-span-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Category Image</label>
+                  <div className="relative group/upload h-32 md:h-14">
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    />
+                    <div className={`w-full h-full border-2 border-dashed rounded-xl flex items-center px-4 transition-all ${
+                      previewUrl 
+                        ? 'border-[#D97706] bg-[#D97706]/5' 
+                        : 'border-gray-200 bg-gray-50 group-hover/upload:border-[#D97706]'
+                    }`}>
+                      <Plus size={18} className={`${previewUrl ? 'text-[#D97706]' : 'text-gray-400'} mr-3`} />
+                      <span className={`text-xs font-bold truncate ${previewUrl ? 'text-[#D97706]' : 'text-gray-400'}`}>
+                        {selectedFile ? selectedFile.name : 'Select Image from Device'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <button 
+                  disabled={saving}
+                  onClick={handleAddCategory}
+                  className="px-6 py-3 bg-[#D97706] text-white rounded-xl text-sm font-bold hover:bg-[#B45309] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-[#D97706]/20"
+                >
+                  {saving ? <Loader2 className="animate-spin" size={18} /> : <Plus size={18} />}
+                  Create
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Edit Category Form */}
+          {editingCategory && (
+            <div className="bg-white p-8 rounded-2xl border border-[#D97706]/20 shadow-xl border-l-4 border-l-[#D97706]">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="font-bold text-lg tracking-tight">Edit Category: <span className="text-[#D97706] italic uppercase">{editingCategory.name}</span></h3>
+                <button 
+                  onClick={() => {
+                    setEditingCategory(null);
+                    setPreviewUrl(null);
+                    setSelectedFile(null);
+                  }}
+                  className="text-xs font-bold text-gray-400 hover:text-black flex items-center gap-1 uppercase tracking-widest"
+                >
+                  <X size={14} /> Close
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Category Name</label>
+                  <input 
+                    type="text" 
+                    className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#D97706] transition-all"
+                    value={editingCategory.name}
+                    onChange={(e) => setEditingCategory({...editingCategory, name: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2 col-span-1 lg:col-span-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Update Image (Optional)</label>
+                  <div className="relative group/upload h-32 md:h-14">
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    />
+                    <div className={`w-full h-full border-2 border-dashed rounded-xl flex items-center px-4 transition-all ${
+                      previewUrl 
+                        ? 'border-[#D97706] bg-[#D97706]/5' 
+                        : 'border-gray-200 bg-gray-50 group-hover/upload:border-[#D97706]'
+                    }`}>
+                      <Plus size={18} className={`${previewUrl ? 'text-[#D97706]' : 'text-gray-400'} mr-3`} />
+                      <span className={`text-xs font-bold truncate ${previewUrl ? 'text-[#D97706]' : 'text-gray-400'}`}>
+                        {selectedFile ? selectedFile.name : 'Change Category Image'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <button 
+                  disabled={saving}
+                  onClick={handleUpdateCategory}
+                  className="px-6 py-3 bg-black text-white rounded-xl text-sm font-bold hover:bg-[#D97706] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {saving ? <Loader2 className="animate-spin" size={18} /> : <Edit2 size={18} />}
+                  Update Category
+                </button>
+              </div>
+            </div>
+          )}
+
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
               {categories.filter(c => c.gender === selectedGender).map((cat) => {
                 const productCount = products.filter(p => p.category_id === cat.id).length;
                 return (
-                  <button 
+                  <div 
                     key={cat.id}
-                    onClick={() => router.push(`/admin/products/${selectedGender}/${cat.name}`)}
-                    className="group relative aspect-[4/5] overflow-hidden rounded-2xl cursor-pointer bg-white shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100"
+                    className="group block"
                   >
-                    <img 
-                      src={cat.image_url} 
-                      alt={cat.name} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    <div className="absolute bottom-6 left-6 text-white text-left">
-                      <h3 className="text-xl font-bold uppercase tracking-tighter mb-1">{cat.name}</h3>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">{productCount} Products</p>
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-2xl cursor-pointer bg-white shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-100 mb-4">
+                      <img 
+                        src={cat.image_url} 
+                        alt={cat.name} 
+                        onClick={() => router.push(`/admin/products/${selectedGender}/${cat.name}`)}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      
+                      {/* Action Overlay */}
+                      <div className="absolute top-4 right-4 flex gap-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 z-10">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingCategory(cat);
+                            setPreviewUrl(cat.image_url);
+                            setIsAddingCategory(false);
+                          }}
+                          className="p-2 bg-white/20 backdrop-blur-md text-white rounded-lg hover:bg-white hover:text-black transition-colors"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteCategory(cat.id);
+                          }}
+                          className="p-2 bg-white/20 backdrop-blur-md text-white rounded-lg hover:bg-red-500 transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+
+                      <div 
+                        onClick={() => router.push(`/admin/products/${selectedGender}/${cat.name}`)}
+                        className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-all duration-500"
+                      />
                     </div>
-                    <div className="absolute top-4 right-4 translate-x-4 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500">
-                       <div className="w-8 h-8 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20">
-                          <ChevronRight size={16} />
-                       </div>
+
+                    <div className="space-y-1">
+                      <h3 className="text-xs font-bold text-gray-900 uppercase tracking-[0.2em] transition-colors group-hover:text-[#D97706]">
+                        {cat.name}
+                      </h3>
+                      <p className="text-[10px] font-medium text-gray-400 uppercase tracking-widest leading-none">
+                        {productCount} items
+                      </p>
                     </div>
-                  </button>
-                )
+                  </div>
+                );
               })}
               
               {categories.filter(c => c.gender === selectedGender).length === 0 && (
                 <div className="col-span-full py-32 bg-white rounded-3xl border-2 border-dashed border-gray-100 flex flex-col items-center justify-center text-center">
                    <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">No categories found for {selectedGender}</p>
-                   <Link 
-                     href="/admin/categories"
+                   <button 
+                     onClick={() => setIsAddingCategory(true)}
                      className="px-8 py-3 bg-black text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#D97706] transition-colors"
                    >
-                     Manage Categories First
-                   </Link>
+                     Create First Category
+                   </button>
                 </div>
               )}
            </div>

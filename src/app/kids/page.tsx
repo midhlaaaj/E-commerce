@@ -13,9 +13,9 @@ export default async function KidsPage() {
   const [heroResponse, categoriesResponse, newArrivalsResponse, saleResponse, selectionResponse] = await Promise.all([
     supabase.from('homepage_content').select('*').eq('section_key', 'kids_hero').single(),
     supabase.from('categories').select('*').eq('gender', 'kids').order('created_at', { ascending: false }),
-    supabase.from('products').select('*').eq('gender', 'kids').order('created_at', { ascending: false }).limit(4),
-    supabase.from('products').select('*').eq('gender', 'kids').not('offer_price', 'is', null).limit(4),
-    supabase.from('products').select('*').eq('gender', 'kids').limit(8)
+    supabase.from('products').select('*').eq('gender', 'kids').order('created_at', { ascending: false }).limit(5),
+    supabase.from('products').select('*').eq('gender', 'kids').not('offer_price', 'is', null).limit(5),
+    supabase.from('products').select('*').eq('gender', 'kids').limit(10)
   ]);
 
   const heroData = heroResponse.data;

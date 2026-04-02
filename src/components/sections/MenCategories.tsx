@@ -34,25 +34,25 @@ export const MenCategories = ({ initialData = [] }: MenCategoriesProps) => {
         icon={<ArrowRight size={14} />}
       />
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
         {categories.map((cat, i) => (
           <Link 
             key={i} 
             href={`/men/${cat.name.toLowerCase().replace(/\s+/g, '-')}`}
-            className="group relative aspect-[4/5] overflow-hidden rounded-xl cursor-pointer bg-gray-50 bg-white shadow-sm hover:shadow-xl transition-all duration-500"
+            className="group block"
           >
-            <Image 
-              src={cat.image_url} 
-              alt={cat.name}
-              fill
-              className="object-cover transition-transform duration-1000 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, 33vw"
-            />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-8 h-1/2 flex items-end">
-              <h3 className="text-white font-extrabold text-2xl tracking-tighter uppercase mb-2 translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                {cat.name}
-              </h3>
+            <div className="relative aspect-[3/4] overflow-hidden rounded-2xl cursor-pointer bg-gray-50 bg-white shadow-sm hover:shadow-xl transition-all duration-500 mb-4">
+              <Image 
+                src={cat.image_url} 
+                alt={cat.name}
+                fill
+                className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
             </div>
+            <h3 className="text-[10px] font-bold text-gray-900 uppercase tracking-[0.2em] transition-colors group-hover:text-[#D97706]">
+              {cat.name}
+            </h3>
           </Link>
         ))}
       </div>

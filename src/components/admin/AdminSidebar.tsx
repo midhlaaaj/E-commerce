@@ -26,7 +26,6 @@ export default function AdminSidebar({ user, profile }: SidebarProps) {
   useEffect(() => {
     // Auto-expand sections based on path
     if (pathname.includes('/admin/products')) setExpandedSections(prev => ({ ...prev, Products: true }));
-    if (pathname.includes('/admin/categories')) setExpandedSections(prev => ({ ...prev, Categories: true }));
   }, [pathname]);
 
   const toggleSection = (label: string) => {
@@ -39,13 +38,6 @@ export default function AdminSidebar({ user, profile }: SidebarProps) {
       icon: Package, 
       label: 'Products', 
       href: '/admin/products',
-      hasDropdown: true,
-      subItems: ['MEN', 'WOMEN', 'KIDS']
-    },
-    { 
-      icon: Layers, 
-      label: 'Categories', 
-      href: '/admin/categories',
       hasDropdown: true,
       subItems: ['MEN', 'WOMEN', 'KIDS']
     },

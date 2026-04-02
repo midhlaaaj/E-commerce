@@ -19,10 +19,10 @@ export default async function Home() {
   const [heroResponse, genderCardsResponse, productsResponse, newArrivalsResponse, quoteResponse, saleResponse] = await Promise.all([
     supabase.from('homepage_content').select('*').eq('section_key', 'main_hero').single(),
     supabase.from('homepage_content').select('*').in('section_key', ['gender_men', 'gender_women', 'gender_kids']),
-    supabase.from('products').select('*').eq('is_featured', true).limit(4),
-    supabase.from('products').select('*').order('created_at', { ascending: false }).limit(4),
+    supabase.from('products').select('*').eq('is_featured', true).limit(5),
+    supabase.from('products').select('*').order('created_at', { ascending: false }).limit(5),
     supabase.from('homepage_content').select('*').eq('section_key', 'editorial_quote').single(),
-    supabase.from('products').select('*').not('offer_price', 'is', null).limit(4)
+    supabase.from('products').select('*').not('offer_price', 'is', null).limit(5)
   ]);
 
   const heroData = heroResponse.data;

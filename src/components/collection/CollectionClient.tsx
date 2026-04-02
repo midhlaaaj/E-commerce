@@ -87,9 +87,12 @@ export default function CollectionClient({
   }, [products]);
 
   // Filter States
+  const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState({ min: 0, max: 50000 });
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [colorSearch, setColorSearch] = useState('');
+  const [categorySearch, setCategorySearch] = useState('');
 
   // Update price range when min/max price bounds change (e.g. category switch)
   useEffect(() => {
@@ -116,6 +119,22 @@ export default function CollectionClient({
 
   const currentSortLabel = sortOptions.find(opt => opt.value === sortBy)?.label || "Sort By";
 
+  // Available Options calculation
+  const availableGenders = ['men', 'women', 'kids'];
+  
+  const availableCategories = useMemo(() => {
+    const cats = new Set<string>();
+    products.forEach(p => {
+      // Show categories relevant to current gender filter (if any)
+      const genderMatch = selectedGenders.length === 0 || selectedGenders.includes(p.gender);
+      const catName = p.category?.name || p.categories?.name;
+      if (genderMatch && catName) {
+        cats.add(catName);
+      }
+    });
+    return Array.from(cats).sort();
+  }, [products, selectedGenders]);
+
   // Extract all unique colors from products for the filter list
   const availableColors = useMemo(() => {
     const colors = new Set<string>();
@@ -134,7 +153,14 @@ export default function CollectionClient({
       const matchesPrice = price >= priceRange.min && price <= priceRange.max;
       const matchesColor = selectedColors.length === 0 || 
         (p.colors && p.colors.some(c => selectedColors.includes(c)));
-      return matchesPrice && matchesColor;
+      
+      const matchesGender = selectedGenders.length === 0 || selectedGenders.includes(p.gender);
+      
+      const catName = p.category?.name || p.categories?.name;
+      const matchesCategory = selectedCategories.length === 0 || 
+        (catName && selectedCategories.includes(catName));
+
+      return matchesPrice && matchesColor && matchesGender && matchesCategory;
     });
 
     // Sorting Logic
@@ -162,7 +188,23 @@ export default function CollectionClient({
     );
   };
 
+  const toggleGender = (g: string) => {
+    setSelectedGenders(prev => 
+      prev.includes(g) ? prev.filter(item => item !== g) : [...prev, g]
+    );
+    // Clear categories that might not be available in other genders
+    setSelectedCategories([]);
+  };
+
+  const toggleCategory = (cat: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+    );
+  };
+
   const clearFilters = () => {
+    setSelectedGenders([]);
+    setSelectedCategories([]);
     setSelectedColors([]);
     setPriceRange({ min: minAvailablePrice, max: maxAvailablePrice });
   };
@@ -172,11 +214,11 @@ export default function CollectionClient({
       <div className="max-w-7xl mx-auto px-6 md:px-12 pt-28">
         {/* Breadcrumb / Back */}
         <button 
-          onClick={() => isBackDynamic ? router.back() : router.push(backLink || `/${gender}`)}
+          onClick={() => isBackDynamic ? router.back() : router.push(backLink || (gender ? `/${gender}` : '/'))}
           className="group flex items-center gap-3 text-[9px] font-bold uppercase tracking-[0.3em] text-gray-400 hover:text-black transition-all mb-6"
         >
           <ChevronLeft size={12} className="group-hover:-translate-x-1 transition-transform" />
-          {backLabel || (backLink ? 'BACK' : `BACK TO ${gender}`)}
+          {backLabel || (backLink ? 'BACK' : (gender ? `BACK TO ${gender}` : 'BACK TO HOME'))}
         </button>
 
         {/* Header (Matching NewArrivals style) */}
@@ -251,6 +293,36 @@ export default function CollectionClient({
             "w-72 flex-shrink-0 space-y-12 transition-all duration-500",
             isFilterOpen ? "block" : "hidden opacity-0 -translate-x-10"
           )}>
+            {/* Gender Filter (Only show on 'all' items or if not restricted) */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1A1614]">Gender</h3>
+                {selectedGenders.length > 0 && (
+                   <button onClick={() => setSelectedGenders([])} className="text-[9px] font-bold text-[#D97706] hover:underline uppercase tracking-widest">Clear</button>
+                )}
+              </div>
+              <div className="space-y-2">
+                {availableGenders.map(g => (
+                  <label key={g} className="flex items-center gap-3 group cursor-pointer">
+                    <div className="relative flex items-center justify-center">
+                      <input 
+                        type="checkbox"
+                        checked={selectedGenders.includes(g)}
+                        onChange={() => toggleGender(g)}
+                        className="peer w-5 h-5 border-2 border-gray-100 rounded-lg appearance-none checked:bg-black checked:border-black transition-all"
+                      />
+                      <div className="absolute opacity-0 peer-checked:opacity-100 text-white transition-opacity">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest group-hover:text-black transition-colors">
+                      {g}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b border-gray-100 pb-4">
                 <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1A1614]">Price Range</h3>
@@ -265,6 +337,48 @@ export default function CollectionClient({
                 valueMax={priceRange.max}
                 onChange={(min, max) => setPriceRange({ min, max })} 
               />
+            </div>
+
+            {/* Category Filter */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1A1614]">Categories</h3>
+                {selectedCategories.length > 0 && (
+                   <button onClick={() => setSelectedCategories([])} className="text-[9px] font-bold text-[#D97706] hover:underline uppercase tracking-widest">Clear ({selectedCategories.length})</button>
+                )}
+              </div>
+              
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input 
+                  type="text" 
+                  placeholder="Search category..."
+                  value={categorySearch}
+                  onChange={(e) => setCategorySearch(e.target.value)}
+                  className="w-full bg-gray-50 border-none rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium focus:ring-1 focus:ring-[#D97706] transition-all"
+                />
+              </div>
+
+              <div className="space-y-3 max-h-[140px] overflow-y-auto pr-2 custom-scrollbar">
+                {availableCategories.filter(c => c.toLowerCase().includes(categorySearch.toLowerCase())).map(cat => (
+                  <label key={cat} className="flex items-center gap-3 group cursor-pointer">
+                    <div className="relative flex items-center justify-center">
+                      <input 
+                        type="checkbox"
+                        checked={selectedCategories.includes(cat)}
+                        onChange={() => toggleCategory(cat)}
+                        className="peer w-5 h-5 border-2 border-gray-100 rounded-lg appearance-none checked:bg-black checked:border-black transition-all"
+                      />
+                      <div className="absolute opacity-0 peer-checked:opacity-100 text-white transition-opacity">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest group-hover:text-black transition-colors">
+                      {cat}
+                    </span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <div className="space-y-6">
@@ -286,7 +400,7 @@ export default function CollectionClient({
                 />
               </div>
 
-              <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-3 max-h-[140px] overflow-y-auto pr-2 custom-scrollbar">
                 {availableColors.filter(c => c.toLowerCase().includes(colorSearch.toLowerCase())).map(color => (
                   <label key={color} className="flex items-center gap-3 group cursor-pointer">
                     <div className="relative flex items-center justify-center">
@@ -318,7 +432,7 @@ export default function CollectionClient({
           {filteredProducts.length > 0 ? (
             <div className={cn(
               "grid gap-x-6 gap-y-12 transition-all duration-500",
-              isFilterOpen && !hideFilters ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-2 lg:grid-cols-4"
+              isFilterOpen && !hideFilters ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4" : "grid-cols-2 lg:grid-cols-5"
             )}>
               {filteredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />

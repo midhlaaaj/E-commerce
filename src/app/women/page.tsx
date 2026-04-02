@@ -13,9 +13,9 @@ export default async function WomenPage() {
   const [heroResponse, categoriesResponse, newArrivalsResponse, saleResponse, selectionResponse] = await Promise.all([
     supabase.from('homepage_content').select('*').eq('section_key', 'women_hero').single(),
     supabase.from('categories').select('*').eq('gender', 'women').order('created_at', { ascending: false }),
-    supabase.from('products').select('*').eq('gender', 'women').order('created_at', { ascending: false }).limit(4),
-    supabase.from('products').select('*').eq('gender', 'women').not('offer_price', 'is', null).limit(4),
-    supabase.from('products').select('*').eq('gender', 'women').limit(8)
+    supabase.from('products').select('*').eq('gender', 'women').order('created_at', { ascending: false }).limit(5),
+    supabase.from('products').select('*').eq('gender', 'women').not('offer_price', 'is', null).limit(5),
+    supabase.from('products').select('*').eq('gender', 'women').limit(10)
   ]);
 
   const heroData = heroResponse.data;

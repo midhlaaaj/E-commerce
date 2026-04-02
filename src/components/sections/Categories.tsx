@@ -38,7 +38,7 @@ export const Categories = ({ initialData = [] }: CategoriesProps) => {
         title2="GENDER" 
         subtitle="CURATED COLLECTIONS" 
         ctaText="EXPLORE ALL" 
-        ctaLink="/shop"
+        ctaLink="/all"
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -46,25 +46,22 @@ export const Categories = ({ initialData = [] }: CategoriesProps) => {
           <Link 
             key={card.id || card.section_key} 
             href={card.cta_link || '#'}
-            className="group relative aspect-[4/5] md:aspect-[3/4] overflow-hidden cursor-pointer bg-gray-100"
+            className="group block"
           >
-            <Image 
-              src={card.image_url || '/placeholder.jpg'}
-              alt={card.title || 'Category'}
-              fill
-              className="object-cover transition-transform duration-1000 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, 33vw"
-            />
-            
-            {/* Subtle bottom gradient for readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-80 transition-opacity" />
-            
-            <div className="absolute bottom-10 left-10 text-white">
-              <h3 className="text-3xl font-extrabold tracking-tighter uppercase mb-1">
-                {card.title}
-              </h3>
-              <div className="w-8 h-[2px] bg-white opacity-60" />
+            <div className="relative aspect-[3/4] overflow-hidden rounded-2xl cursor-pointer bg-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 mb-6">
+              <Image 
+                src={card.image_url || '/placeholder.jpg'}
+                alt={card.title || 'Category'}
+                fill
+                className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
             </div>
+            
+            <h3 className="text-xl font-extrabold tracking-tighter uppercase mb-1 transition-colors group-hover:text-[#D97706]">
+              {card.title}
+            </h3>
+            <div className="w-8 h-[2px] bg-[#D97706] transition-all group-hover:w-16" />
           </Link>
         ))}
       </div>

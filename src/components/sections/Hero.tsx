@@ -70,7 +70,7 @@ export const Hero = ({ initialData }: HeroProps) => {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 pt-6">
-            <Link href={content?.cta_link || '/all'}>
+            <Link href="/all">
               <button className="bg-white text-black px-12 py-5 text-[10px] font-bold uppercase tracking-[0.2em] min-w-[180px] hover:bg-gray-200 transition-all active:scale-95 rounded-none">
                 {content?.cta_text || 'SHOP NOW'}
               </button>
