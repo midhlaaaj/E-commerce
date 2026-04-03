@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Trash2 } from 'lucide-react';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { supabase } from '@/lib/supabase';
+import { useRealtime } from '@/hooks/useRealtime';
 import { ProductCard, type Product } from '@/components/product/ProductCard';
 
 export const RecentlyVisited = () => {
@@ -14,14 +15,16 @@ export const RecentlyVisited = () => {
   const [hasMounted, setHasMounted] = useState(false);
 
   const loadHistory = async () => {
-    // Safety check for browser environment
     if (typeof window === 'undefined') return;
 
     try {
       const historyJson = localStorage.getItem('recently-visited');
-      const history: string[] = historyJson ? JSON.parse(historyJson) : [];
+      let history: string[] = historyJson ? JSON.parse(historyJson) : [];
 
-      if (!history || history.length === 0) {
+      // Filter for basic validity (non-empty strings)
+      const validHistory = history.filter(id => typeof id === 'string' && id.length > 0);
+
+      if (validHistory.length === 0) {
         setProducts([]);
         setHasHistory(false);
         setLoading(false);
@@ -29,29 +32,29 @@ export const RecentlyVisited = () => {
       }
 
       setHasHistory(true);
-      // Only keep loading if we actually have IDs to fetch
-      setLoading(true);
 
       const { data, error } = await supabase
         .from('products')
         .select('*, categories(name)')
-        .in('id', history);
+        .in('id', validHistory);
 
       if (error) {
-        console.error('RecentlyVisited: Query Error:', error);
+        console.error('RecentlyVisited Logic Error:', error);
         setLoading(false);
         return;
       }
 
       if (data) {
-        // Map data to match history order and normalize category structure
-        const mappedData = data.map(p => ({
-            ...p,
-            category: p.categories?.name || 'Collection'
-        }));
-
-        const sortedData = history
-          .map(id => mappedData.find(p => p.id === id))
+        // Maintain order and normalize category structure for ProductCard
+        const sortedData = validHistory
+          .map(id => {
+            const product = data.find(p => p.id === id);
+            if (!product) return null;
+            return {
+              ...product,
+              category: product.categories || { name: 'Collection' }
+            };
+          })
           .filter(p => !!p) as Product[];
         
         setProducts(sortedData);
@@ -59,6 +62,7 @@ export const RecentlyVisited = () => {
     } catch (err) {
       console.error('RecentlyVisited: Load Exception:', err);
     } finally {
+      // Force loading off after any outcome
       setLoading(false);
     }
   };
@@ -67,7 +71,7 @@ export const RecentlyVisited = () => {
     setHasMounted(true);
     loadHistory();
     
-    // Listen for storage changes across tabs
+    // Listen for storage changes across tabs (Real-Time Sync of the list itself)
     const handleStorage = (e: StorageEvent) => {
       if (e.key === 'recently-visited') loadHistory();
     };
@@ -75,6 +79,11 @@ export const RecentlyVisited = () => {
     window.addEventListener('storage', handleStorage);
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
+
+  // Real-Time Sync: Update details if products in history change externally
+  useRealtime('products', () => {
+    loadHistory();
+  });
 
   const clearHistory = () => {
     localStorage.removeItem('recently-visited');
@@ -96,15 +105,17 @@ export const RecentlyVisited = () => {
       />
 
       {loading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="aspect-[3/4] bg-black/[0.02] animate-pulse" />
+            <div key={i} className="w-[calc(50%-12px)] lg:w-[calc(20%-19.2px)] flex-shrink-0 aspect-[3/4] bg-black/[0.02] animate-pulse rounded-sm" />
           ))}
         </div>
       ) : products.length > 0 ? (
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-6 animate-in fade-in duration-700">
+        <div className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide animate-in fade-in duration-700">
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <div key={product.id} className="w-[calc(50%-12px)] lg:w-[calc(20%-19.2px)] flex-shrink-0">
+              <ProductCard product={product} />
+            </div>
           ))}
         </div>
       ) : (

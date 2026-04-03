@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 import { AuthProvider } from "@/hooks/useAuth";
-import { NavbarWrapper } from "@/components/layout/NavbarWrapper";
+import { RealtimeStoreSync } from "@/components/providers/RealtimeStoreSync";
 
 export default function RootLayout({
   children,
@@ -27,8 +27,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={cn("min-h-screen bg-white font-sans antialiased", roboto.variable)}>
         <AuthProvider>
-          <NavbarWrapper />
-          {children}
+          <RealtimeStoreSync>
+            {children}
+          </RealtimeStoreSync>
         </AuthProvider>
       </body>
     </html>

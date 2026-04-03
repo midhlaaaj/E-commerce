@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { uploadImage } from '@/lib/storage';
+import { useRealtime } from '@/hooks/useRealtime';
 
 interface Category {
   id: string;
@@ -76,6 +77,14 @@ export default function ProductsClient({
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   
   const router = useRouter();
+
+  // Real-Time Sync: Refetch when products or categories change
+  useRealtime('products', () => {
+    fetchProducts();
+  });
+  useRealtime('categories', () => {
+    fetchCategories();
+  });
 
   async function fetchProducts() {
     setLoading(true);

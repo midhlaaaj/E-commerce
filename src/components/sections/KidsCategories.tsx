@@ -34,25 +34,32 @@ export const KidsCategories = ({ initialData = [] }: KidsCategoriesProps) => {
         icon={<ArrowRight size={14} />}
       />
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
         {categories.map((cat, i) => (
           <Link 
             key={i} 
             href={`/kids/${cat.name.toLowerCase().replace(/\s+/g, '-')}`}
             className="group block"
           >
-            <div className="relative aspect-[3/4] overflow-hidden rounded-2xl cursor-pointer bg-gray-50 bg-white shadow-sm hover:shadow-xl transition-all duration-500 mb-4">
+            <div className="relative aspect-[3/4] overflow-hidden rounded-sm cursor-pointer bg-gray-50 shadow-sm hover:shadow-md transition-all duration-500">
               <Image 
                 src={cat.image_url} 
                 alt={cat.name}
                 fill
-                className="object-cover transition-transform duration-1000 group-hover:scale-105"
-                sizes="(max-width: 768px) 100vw, 33vw"
+                className="object-cover transition-transform duration-1000 group-hover:scale-110"
+                sizes="(max-width: 768px) 100vw, 20vw"
               />
+              {/* Overlay Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+              
+              {/* Content Overlay */}
+              <div className="absolute bottom-6 left-6 right-6 text-white text-center">
+                <h3 className="text-xl font-black tracking-tighter uppercase mb-2 drop-shadow-sm transition-transform duration-500 group-hover:-translate-y-1">
+                  {cat.name}
+                </h3>
+                <div className="mx-auto w-8 h-[2px] bg-[#D97706] transition-all duration-500 group-hover:w-16" />
+              </div>
             </div>
-            <h3 className="text-[10px] font-bold text-gray-900 uppercase tracking-[0.2em] transition-colors group-hover:text-[#D97706]">
-              {cat.name}
-            </h3>
           </Link>
         ))}
       </div>

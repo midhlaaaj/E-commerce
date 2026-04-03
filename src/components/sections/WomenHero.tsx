@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 interface WomenHeroProps {
   initialData?: any;
@@ -31,14 +32,31 @@ export const WomenHero = ({ initialData }: WomenHeroProps) => {
     <section className="relative h-[85vh] md:h-screen w-full flex items-end overflow-hidden">
       {/* Background Image Container */}
       <div className="absolute inset-0">
+        {/* Desktop Image */}
         <Image 
           src={content?.image_url || "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1920&auto=format&fit=crop"} 
-          alt={content?.title || "Women's Selection"}
+          alt={content?.title || "Women's Selection Desktop"}
           fill
           priority
-          className="object-cover object-top brightness-[0.8]"
+          className={cn(
+            "object-cover brightness-[0.8]",
+            content?.mobile_image_url ? "hidden md:block" : "block"
+          )}
           sizes="100vw"
         />
+        
+        {/* Mobile-Specific Image (if available) */}
+        {content?.mobile_image_url && (
+          <Image 
+            src={content.mobile_image_url}
+            alt={content?.title || "Women's Selection Mobile"}
+            fill
+            priority
+            className="object-cover brightness-[0.8] block md:hidden"
+            sizes="100vw"
+          />
+        )}
+        
         {/* Gradient Overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
       </div>

@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 interface HeroProps {
   initialData?: any;
@@ -32,15 +33,33 @@ export const Hero = ({ initialData }: HeroProps) => {
     <section className="relative h-[85vh] md:h-screen w-full flex items-end overflow-hidden">
       {/* Background Image Container */}
       <div className="absolute inset-0">
+        {/* Desktop Image */}
         <Image 
           src={content?.image_url || 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1974&auto=format&fit=crop'}
-          alt="Hero Background"
+          alt="Hero Background Desktop"
           fill
           priority
-          className="object-cover brightness-[0.75] select-none"
+          className={cn(
+            "object-cover brightness-[0.75] select-none",
+            content?.mobile_image_url ? "hidden md:block" : "block"
+          )}
           sizes="100vw"
           quality={100}
         />
+        
+        {/* Mobile-Specific Image (if available) */}
+        {content?.mobile_image_url && (
+          <Image 
+            src={content.mobile_image_url}
+            alt="Hero Background Mobile"
+            fill
+            priority
+            className="object-cover brightness-[0.75] select-none block md:hidden"
+            sizes="100vw"
+            quality={100}
+          />
+        )}
+        
         {/* Subtle Gradient Overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
       </div>

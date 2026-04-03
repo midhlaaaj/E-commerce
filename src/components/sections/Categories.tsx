@@ -41,27 +41,33 @@ export const Categories = ({ initialData = [] }: CategoriesProps) => {
         ctaLink="/all"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {sortedCards.map((card) => (
           <Link 
             key={card.id || card.section_key} 
             href={card.cta_link || '#'}
             className="group block"
           >
-            <div className="relative aspect-[3/4] overflow-hidden rounded-2xl cursor-pointer bg-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 mb-6">
+            <div className="relative aspect-[3/4] overflow-hidden rounded-sm cursor-pointer bg-gray-100 shadow-sm hover:shadow-md transition-all duration-500">
               <Image 
                 src={card.image_url || '/placeholder.jpg'}
                 alt={card.title || 'Category'}
                 fill
-                className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                className="object-cover transition-transform duration-1000 group-hover:scale-110"
                 sizes="(max-width: 768px) 100vw, 33vw"
               />
+              
+              {/* Overlay Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+              
+              {/* Content Overlay */}
+              <div className="absolute bottom-8 left-8 right-8 text-white">
+                <h3 className="text-3xl font-black tracking-tighter uppercase mb-2 drop-shadow-sm">
+                  {card.title}
+                </h3>
+                <div className="w-10 h-[3px] bg-[#D97706] transition-all duration-500 group-hover:w-20" />
+              </div>
             </div>
-            
-            <h3 className="text-xl font-extrabold tracking-tighter uppercase mb-1 transition-colors group-hover:text-[#D97706]">
-              {card.title}
-            </h3>
-            <div className="w-8 h-[2px] bg-[#D97706] transition-all group-hover:w-16" />
           </Link>
         ))}
       </div>

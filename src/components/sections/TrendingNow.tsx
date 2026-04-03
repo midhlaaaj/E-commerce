@@ -2,27 +2,34 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Loader2, Plus } from 'lucide-react';
+import { useRealtime } from '@/hooks/useRealtime';
+import { Loader2 } from 'lucide-react';
 
 export const TrendingNow = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchTrending() {
-      const { data } = await supabase
-        .from('products')
-        .select('*')
-        .eq('is_featured', true)
-        .limit(5);
-      
-      if (data) {
-        setProducts(data);
-      }
-      setLoading(false);
+  async function fetchTrending() {
+    const { data } = await supabase
+      .from('products')
+      .select('*')
+      .eq('is_featured', true)
+      .limit(5);
+    
+    if (data) {
+      setProducts(data);
     }
+    setLoading(false);
+  }
+
+  useEffect(() => {
     fetchTrending();
   }, []);
+
+  // Real-Time Sync: Refetch trending if any product changes
+  useRealtime('products', () => {
+    fetchTrending();
+  });
 
   if (loading) return (
     <div className="py-20 flex flex-col items-center justify-center gap-4">
@@ -39,7 +46,7 @@ export const TrendingNow = () => {
         Curated this week's most loved pieces for the modern minimalist lifestyle.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 text-left">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 text-left">
         {products.map((product) => (
           <div key={product.id} className="group cursor-pointer">
             <div className="aspect-[3/4] overflow-hidden rounded-2xl bg-gray-50 mb-6 relative shadow-sm group-hover:shadow-xl transition-all duration-500">

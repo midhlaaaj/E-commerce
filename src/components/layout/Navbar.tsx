@@ -127,7 +127,10 @@ export const Navbar = ({ transparent = false }: NavbarProps) => {
           </Link>
 
           {loading ? (
-             <Loader2 className="animate-spin text-gray-300" size={18} />
+            <div className="flex items-center gap-4 opacity-0 pointer-events-none">
+              <span className="text-[10px] font-bold tracking-widest uppercase px-2">Login</span>
+              <div className="px-5 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase">Join</div>
+            </div>
           ) : user ? (
             <div className="flex items-center gap-6">
               {isAdmin && (

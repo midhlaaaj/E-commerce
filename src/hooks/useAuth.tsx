@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase, adminSupabase } from '@/lib/supabase';
 import { User, SupabaseClient } from '@supabase/supabase-js';
-import { signOutAction } from '@/app/auth/actions';
+import { signOutAction } from '@/app/(storefront)/auth/actions';
 
 interface AuthContextType {
   user: User | null;

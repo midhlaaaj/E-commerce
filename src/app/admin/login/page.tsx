@@ -2,11 +2,8 @@
 
 import { useState } from 'react';
 import { adminLogin } from './actions';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, ArrowRight, Lock, User as UserIcon } from 'lucide-react';
-
-import { AuthLayoutWrapper } from '@/components/auth/AuthLayoutWrapper';
+import { Loader2, ArrowRight } from 'lucide-react';
 
 export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
@@ -27,7 +24,6 @@ export default function AdminLoginPage() {
       }
 
       if (result.success) {
-        // Full page reload for absolute cookie synchronization
         window.location.href = '/admin';
       }
     } catch (err: any) {
@@ -38,73 +34,75 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <AuthLayoutWrapper
-      title1="ADMIN"
-      title2="ACCESS"
-      subtitle="MASTER TERMINAL"
-      imageUrl="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2070&auto=format&fit=crop"
-    >
-      <div className="space-y-6">
-        {error && (
-          <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-600 text-[9px] font-black uppercase tracking-[0.3em] animate-in fade-in slide-in-from-top-2 text-center">
-            {error}
-          </div>
-        )}
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 selection:bg-black selection:text-white">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <Link href="/" className="inline-flex items-center gap-2 group mb-6">
+            <div className="w-8 h-8 bg-gray-900 text-white rounded-lg flex items-center justify-center font-bold text-lg shadow-sm">
+              E
+            </div>
+          </Link>
+          <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">Admin Gateway</h1>
+          <p className="text-sm text-gray-500 mt-2">Sign in to manage your storefront</p>
+        </div>
 
-        <form onSubmit={handleLogin} className="space-y-6 pt-2">
-          <div className="space-y-8 pb-4">
-            <div className="space-y-3">
-              <label className="text-[9px] font-black tracking-[0.4em] uppercase text-black/30 ml-1">
-                Admin Identity
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-500 delay-150 fill-mode-both">
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 text-red-600 text-sm rounded-xl border border-red-100 flex items-start gap-3">
+              <span className="block mt-0.5">•</span>
+              <p>{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700 ml-1">
+                Email address
               </label>
-              <div className="relative group">
-                <UserIcon className="absolute left-0 top-1/2 -translate-y-1/2 text-black/20 group-focus-within:text-black transition-colors" size={14} />
-                <input 
-                  type="email" 
-                  required
-                  placeholder="ADMIN@ELITEWEAR.COM"
-                  className="w-full pl-8 pr-0 py-4 bg-transparent border-b border-black/10 text-[11px] font-bold uppercase tracking-widest focus:border-black transition-all outline-none placeholder:text-black/10"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
+              <input 
+                type="email" 
+                required
+                placeholder="admin@elitewear.com"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-gray-900 transition-all placeholder:text-gray-400"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
 
-            <div className="space-y-3">
-              <label className="text-[9px] font-black tracking-[0.4em] uppercase text-black/30 ml-1">
-                Security Key
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-gray-700 ml-1">
+                Password
               </label>
-              <div className="relative group">
-                <Lock className="absolute left-0 top-1/2 -translate-y-1/2 text-black/20 group-focus-within:text-black transition-colors" size={14} />
-                <input 
-                  type="password" 
-                  required
-                  placeholder="••••••••"
-                  className="w-full pl-8 pr-0 py-4 bg-transparent border-b border-black/10 text-[11px] font-bold uppercase tracking-widest focus:border-black transition-all outline-none placeholder:text-black/10"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
+              <input 
+                type="password" 
+                required
+                placeholder="••••••••"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-gray-900 transition-all placeholder:text-gray-400"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
-          </div>
 
-          <button 
-            disabled={loading}
-            type="submit"
-            className="w-full py-6 bg-black text-white rounded-none text-[10px] font-black uppercase tracking-[0.5em] hover:opacity-80 transition-all active:scale-[0.98] flex items-center justify-center gap-4 group"
-          >
-            {loading ? <Loader2 className="animate-spin" size={16} /> : null}
-            {loading ? 'AUTHENTICATING' : 'INITIALIZE ACCESS'}
-            {!loading && <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />}
-          </button>
-        </form>
+            <div className="pt-2">
+              <button 
+                disabled={loading}
+                type="submit"
+                className="w-full py-3.5 px-4 bg-gray-900 hover:bg-black text-white rounded-xl text-sm font-medium transition-all active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 flex items-center justify-center gap-2 group"
+              >
+                {loading ? <Loader2 className="animate-spin text-gray-400" size={18} /> : null}
+                <span>{loading ? 'Signing in...' : 'Sign in'}</span>
+                {!loading && <ArrowRight size={16} className="text-gray-400 group-hover:translate-x-1 group-hover:text-white transition-all" />}
+              </button>
+            </div>
+          </form>
+        </div>
 
-        <div className="text-center pt-10">
-          <Link href="/" className="text-[9px] text-black/40 font-black uppercase tracking-[0.3em] hover:text-black transition-colors border-b border-transparent hover:border-black/10 pb-1">
-            ← Return to public site
+        <div className="mt-8 text-center animate-in fade-in duration-1000 delay-300 fill-mode-both">
+          <Link href="/" className="text-sm text-gray-400 hover:text-gray-900 font-medium transition-colors">
+            ← Back to public site
           </Link>
         </div>
       </div>
-    </AuthLayoutWrapper>
+    </div>
   );
 }

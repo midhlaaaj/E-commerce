@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { adminSupabase } from '@/lib/supabase';
 import { uploadImage } from '@/lib/storage';
+import { ImageCropper } from '@/components/admin/ImageCropper';
 import { 
   Save, 
   Loader2, 
@@ -14,7 +15,8 @@ import {
   CheckCircle2,
   Upload,
   X,
-  Quote
+  Quote,
+  Smartphone
 } from 'lucide-react';
 
 interface HomepageContent {
@@ -24,6 +26,7 @@ interface HomepageContent {
   title_bold?: string;
   subtitle: string;
   image_url: string;
+  mobile_image_url?: string;
   cta_text: string;
   cta_link: string;
   cta_secondary_text?: string;
@@ -56,28 +59,57 @@ export default function HomepageManagementClient({ initialData }: { initialData:
   const [content, setContent] = useState<HomepageContent[]>(initialData);
   const [saving, setSaving] = useState<string | null>(null);
   const [savedStatus, setSavedStatus] = useState<string | null>(null);
-  const [pendingFiles, setPendingFiles] = useState<Record<string, { file: File, preview: string }>>({});
+  const [pendingFiles, setPendingFiles] = useState<Record<string, { 
+    desktop: { file: File, preview: string },
+    mobile: { file: File, preview: string }
+  }>>({});
+  const [croppingAsset, setCroppingAsset] = useState<{ sectionId: string; file: File; preview: string } | null>(null);
 
   const handleFileChange = (sectionId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const preview = URL.createObjectURL(file);
-      setPendingFiles(prev => ({
-        ...prev,
-        [sectionId]: { file, preview }
-      }));
+      setCroppingAsset({ sectionId, file, preview });
     }
+    // Reset file input so selecting the same file again works
+    e.target.value = '';
+  };
+
+  const handleCropComplete = (desktopFile: File, mobileFile: File, desktopPreview: string, mobilePreview: string) => {
+    if (!croppingAsset) return;
+    
+    URL.revokeObjectURL(croppingAsset.preview);
+    
+    setPendingFiles(prev => ({
+      ...prev,
+      [croppingAsset.sectionId]: { 
+        desktop: { file: desktopFile, preview: desktopPreview },
+        mobile: { file: mobileFile, preview: mobilePreview }
+      }
+    }));
+    
+    setCroppingAsset(null);
   };
 
   async function handleUpdate(section: HomepageContent) {
     setSaving(section.id);
     try {
       let finalImageUrl = section.image_url;
+      let finalMobileImageUrl = section.mobile_image_url;
       
       const pending = pendingFiles[section.id];
       if (pending) {
-        finalImageUrl = await uploadImage(pending.file, 'products');
-        URL.revokeObjectURL(pending.preview);
+        // Upload both in parallel for efficiency
+        const [desktopUrl, mobileUrl] = await Promise.all([
+          uploadImage(pending.desktop.file, 'products'),
+          uploadImage(pending.mobile.file, 'products')
+        ]);
+        
+        finalImageUrl = desktopUrl;
+        finalMobileImageUrl = mobileUrl;
+        
+        URL.revokeObjectURL(pending.desktop.preview);
+        URL.revokeObjectURL(pending.mobile.preview);
       }
 
       const { error } = await adminSupabase
@@ -87,6 +119,7 @@ export default function HomepageManagementClient({ initialData }: { initialData:
           title_bold: section.title_bold,
           subtitle: section.subtitle,
           image_url: finalImageUrl,
+          mobile_image_url: finalMobileImageUrl,
           cta_text: section.cta_text,
           cta_link: section.cta_link,
           cta_secondary_text: section.cta_secondary_text,
@@ -97,7 +130,7 @@ export default function HomepageManagementClient({ initialData }: { initialData:
       
       if (error) throw error;
       
-      setContent(prev => prev.map(item => item.id === section.id ? { ...item, image_url: finalImageUrl } : item));
+      setContent(prev => prev.map(item => item.id === section.id ? { ...item, image_url: finalImageUrl, mobile_image_url: finalMobileImageUrl } : item));
       setPendingFiles(prev => {
         const next = { ...prev };
         delete next[section.id];
@@ -131,7 +164,7 @@ export default function HomepageManagementClient({ initialData }: { initialData:
           return (
             <div key={section.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden group">
               <div className="flex flex-col lg:flex-row">
-                <div className={`lg:w-1/3 relative aspect-video lg:aspect-auto ${section.section_key === 'editorial_quote' ? 'bg-[#F8F8F8] p-8 flex flex-col justify-center items-center text-center' : 'bg-gray-100'} overflow-hidden`}>
+                    <div className={`lg:w-1/3 relative aspect-video lg:aspect-auto ${section.section_key === 'editorial_quote' ? 'bg-[#F8F8F8] p-8 flex flex-col justify-center items-center text-center' : 'bg-gray-100'} overflow-hidden`}>
                   {section.section_key === 'editorial_quote' ? (
                     <div className="text-black">
                       <Quote size={24} className="mx-auto mb-4 text-[#D97706] rotate-180" />
@@ -140,13 +173,21 @@ export default function HomepageManagementClient({ initialData }: { initialData:
                     </div>
                   ) : (
                     <>
-                      <img src={pendingFiles[section.id]?.preview || section.image_url} alt={section.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
+                      <img src={pendingFiles[section.id]?.desktop.preview || section.image_url} alt={section.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
                         <div className="text-white">
                           <p className="text-[10px] font-bold uppercase tracking-widest opacity-80">{section.subtitle}</p>
                           <h4 className="font-heading font-bold text-lg leading-tight mt-1">{section.title}</h4>
                         </div>
                       </div>
+                      
+                      {/* Mobile Preview Badge if a mobile crop is pending */}
+                      {pendingFiles[section.id] && (
+                        <div className="absolute top-4 right-4 bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 animate-in slide-in-from-top-2 duration-300">
+                          <Smartphone size={10} className="text-[#D97706]" />
+                          <span className="text-[8px] font-bold text-white uppercase tracking-tighter">Dual Crop Ready</span>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>
@@ -209,13 +250,14 @@ export default function HomepageManagementClient({ initialData }: { initialData:
                           }`}>
                             <Upload size={18} className={`${pendingFiles[section.id] ? 'text-[#D97706]' : 'text-gray-400'} mr-3`} />
                             <span className={`text-[10px] font-bold truncate uppercase tracking-widest ${pendingFiles[section.id] ? 'text-[#D97706]' : 'text-gray-400'}`}>
-                              {pendingFiles[section.id] ? pendingFiles[section.id].file.name : 'Upload New Asset from Device'}
+                              {pendingFiles[section.id] ? pendingFiles[section.id].desktop.file.name : 'Upload New Asset from Device'}
                             </span>
                             {pendingFiles[section.id] && (
                               <button 
                                  onClick={(e) => {
                                    e.preventDefault();
-                                   URL.revokeObjectURL(pendingFiles[section.id].preview);
+                                   URL.revokeObjectURL(pendingFiles[section.id].desktop.preview);
+                                   URL.revokeObjectURL(pendingFiles[section.id].mobile.preview);
                                    setPendingFiles(prev => {
                                      const next = { ...prev };
                                      delete next[section.id];
@@ -272,6 +314,18 @@ export default function HomepageManagementClient({ initialData }: { initialData:
           );
         })}
       </div>
+
+      {croppingAsset && (
+        <ImageCropper 
+          imageSrc={croppingAsset.preview}
+          originalFile={croppingAsset.file}
+          onCropComplete={handleCropComplete}
+          onCancel={() => {
+            URL.revokeObjectURL(croppingAsset.preview);
+            setCroppingAsset(null);
+          }}
+        />
+      )}
     </div>
   );
 }

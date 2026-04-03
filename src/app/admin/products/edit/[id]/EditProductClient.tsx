@@ -60,8 +60,7 @@ export default function EditProductClient({ initialCategories, initialProduct }:
   const [sizes, setSizes] = useState<string[]>(initialProduct.sizes || []);
   const [newSize, setNewSize] = useState('');
 
-  // Local filtering of categories based on gender
-  const filteredCategories = categories.filter(c => c.gender === selectedGender);
+  // Local filtering of categories is no longer needed in this view as we don't show the selector
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -118,17 +117,20 @@ export default function EditProductClient({ initialCategories, initialProduct }:
       
       console.log('4. Success! Cleanup and Redirecting...');
       
-      // Dynamic Redirection back to source collection
+      // Dynamic Redirection back to source collection using Next.js router
       if (selectedGender) {
         const categoryName = categories.find(c => c.id === product.category_id)?.name;
         if (categoryName) {
-          window.location.href = `/admin/products/${selectedGender}/${categoryName}`;
+          router.push(`/admin/products/${selectedGender}/${categoryName}`);
         } else {
-          window.location.href = `/admin/products/${selectedGender}`;
+          router.push(`/admin/products/${selectedGender}`);
         }
       } else {
-        window.location.href = '/admin/products';
+        router.push('/admin/products');
       }
+      
+      // Ensure the server components refresh their data
+      router.refresh();
     } catch (err: any) {
       console.error('Error updating product:', err);
       setSubmitError(err.message || 'An unknown error occurred while updating the product.');
@@ -225,28 +227,6 @@ export default function EditProductClient({ initialCategories, initialProduct }:
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 space-y-2">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Category *</label>
-                {filteredCategories.length === 0 ? (
-                  <div className="w-full px-4 py-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-xs font-bold uppercase tracking-widest text-center">
-                    No Categories Found
-                  </div>
-                ) : (
-                  <select 
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-[#D97706] transition-all"
-                    value={product.category_id}
-                    onChange={(e) => setProduct({...product, category_id: e.target.value})}
-                  >
-                    <option value="">Select Category</option>
-                    {filteredCategories.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                )}
-              </div>
-            </div>
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Stock Level</label>
