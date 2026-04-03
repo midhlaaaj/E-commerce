@@ -30,7 +30,7 @@ export const WomenCategories = ({ initialData = [] }: WomenCategoriesProps) => {
         title2="CATEGORY" 
         subtitle="CURATED SELECTION"
         ctaText="EXPLORE ALL"
-        ctaLink="/women"
+        ctaLink="/women/collection"
         icon={<ArrowRight size={14} />}
       />
       

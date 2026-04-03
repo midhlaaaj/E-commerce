@@ -1,5 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { SectionHeader } from '@/components/layout/SectionHeader';
 
 interface KidsCategoriesProps {
   initialData?: any[];
@@ -23,10 +25,14 @@ export const KidsCategories = ({ initialData = [] }: KidsCategoriesProps) => {
 
   return (
     <section className="py-20 px-6 max-w-7xl mx-auto">
-      <div className="mb-12">
-        <span className="text-[10px] font-bold text-[#D97706] tracking-[0.2em] uppercase mb-2 block">GROWING WITH STYLE</span>
-        <h2 className="text-3xl font-extrabold tracking-tight uppercase">SHOP BY COLLECTION</h2>
-      </div>
+      <SectionHeader 
+        title1="KIDS'" 
+        title2="COLLECTION" 
+        subtitle="GROWING WITH STYLE"
+        ctaText="EXPLORE ALL"
+        ctaLink="/kids/collection"
+        icon={<ArrowRight size={14} />}
+      />
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
         {categories.map((cat, i) => (

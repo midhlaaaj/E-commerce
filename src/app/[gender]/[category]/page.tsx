@@ -62,6 +62,7 @@ export default async function GenderCategoryPage({ params }: Props) {
     <main className="min-h-screen bg-white">
       <CollectionClient 
         gender={gender}
+        categoryName={categoryData.name}
         initialProducts={products || []} 
         title1={gender.toUpperCase()}
         title2={categoryData.name.toUpperCase()}

@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase, adminSupabase } from '@/lib/supabase';
 import { User, SupabaseClient } from '@supabase/supabase-js';
+import { signOutAction } from '@/app/auth/actions';
 
 interface AuthContextType {
   user: User | null;
@@ -75,12 +76,23 @@ const createAuthProvider = (Context: React.Context<AuthContextType>, client: Sup
 
     const signOut = async () => {
       try {
-        await client.auth.signOut();
+        // Clear local state immediately for optimistic UI
         setUser(null);
         setProfile(null);
-        // Clear any other session-related state if needed
+        
+        // Parallel sign out for speed: server and client
+        // The server action will specifically clear the httpOnly cookies
+        await Promise.all([
+          client.auth.signOut(),
+          signOutAction()
+        ]);
+        
+        // Force reload to completely clean up any memory/context state
+        window.location.href = '/';
       } catch (err) {
         console.error('Sign out error:', err);
+        // Fallback reload if something goes wrong
+        window.location.href = '/';
       }
     };
 

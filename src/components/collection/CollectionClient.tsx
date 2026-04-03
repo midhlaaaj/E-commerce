@@ -32,6 +32,7 @@ interface Product {
 
 interface CollectionClientProps {
   gender?: string;
+  categoryName?: string;
   initialProducts: Product[];
   title1?: string;
   title2?: string;
@@ -45,6 +46,7 @@ interface CollectionClientProps {
 
 export default function CollectionClient({ 
   gender, 
+  categoryName,
   initialProducts,
   title1,
   title2,
@@ -180,7 +182,7 @@ export default function CollectionClient({
     }
 
     return result;
-  }, [products, priceRange, selectedColors, sortBy]);
+  }, [products, priceRange, selectedGenders, selectedCategories, selectedColors, sortBy]);
 
   const toggleColor = (color: string) => {
     setSelectedColors(prev => 
@@ -293,35 +295,37 @@ export default function CollectionClient({
             "w-72 flex-shrink-0 space-y-12 transition-all duration-500",
             isFilterOpen ? "block" : "hidden opacity-0 -translate-x-10"
           )}>
-            {/* Gender Filter (Only show on 'all' items or if not restricted) */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1A1614]">Gender</h3>
-                {selectedGenders.length > 0 && (
-                   <button onClick={() => setSelectedGenders([])} className="text-[9px] font-bold text-[#D97706] hover:underline uppercase tracking-widest">Clear</button>
-                )}
-              </div>
-              <div className="space-y-2">
-                {availableGenders.map(g => (
-                  <label key={g} className="flex items-center gap-3 group cursor-pointer">
-                    <div className="relative flex items-center justify-center">
-                      <input 
-                        type="checkbox"
-                        checked={selectedGenders.includes(g)}
-                        onChange={() => toggleGender(g)}
-                        className="peer w-5 h-5 border-2 border-gray-100 rounded-lg appearance-none checked:bg-black checked:border-black transition-all"
-                      />
-                      <div className="absolute opacity-0 peer-checked:opacity-100 text-white transition-opacity">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            {/* Gender Filter (Only show on 'all' items) */}
+            {!gender && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1A1614]">Gender</h3>
+                  {selectedGenders.length > 0 && (
+                     <button onClick={() => setSelectedGenders([])} className="text-[9px] font-bold text-[#D97706] hover:underline uppercase tracking-widest">Clear</button>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {availableGenders.map(g => (
+                    <label key={g} className="flex items-center gap-3 group cursor-pointer">
+                      <div className="relative flex items-center justify-center">
+                        <input 
+                          type="checkbox"
+                          checked={selectedGenders.includes(g)}
+                          onChange={() => toggleGender(g)}
+                          className="peer w-5 h-5 border-2 border-gray-100 rounded-lg appearance-none checked:bg-black checked:border-black transition-all"
+                        />
+                        <div className="absolute opacity-0 peer-checked:opacity-100 text-white transition-opacity">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
                       </div>
-                    </div>
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest group-hover:text-black transition-colors">
-                      {g}
-                    </span>
-                  </label>
-                ))}
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest group-hover:text-black transition-colors">
+                        {g}
+                      </span>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b border-gray-100 pb-4">
@@ -339,47 +343,49 @@ export default function CollectionClient({
               />
             </div>
 
-            {/* Category Filter */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1A1614]">Categories</h3>
-                {selectedCategories.length > 0 && (
-                   <button onClick={() => setSelectedCategories([])} className="text-[9px] font-bold text-[#D97706] hover:underline uppercase tracking-widest">Clear ({selectedCategories.length})</button>
-                )}
-              </div>
-              
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input 
-                  type="text" 
-                  placeholder="Search category..."
-                  value={categorySearch}
-                  onChange={(e) => setCategorySearch(e.target.value)}
-                  className="w-full bg-gray-50 border-none rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium focus:ring-1 focus:ring-[#D97706] transition-all"
-                />
-              </div>
+            {/* Category Filter - Only shown if not already scoped to a category */}
+            {!categoryName && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1A1614]">Categories</h3>
+                  {selectedCategories.length > 0 && (
+                     <button onClick={() => setSelectedCategories([])} className="text-[9px] font-bold text-[#D97706] hover:underline uppercase tracking-widest">Clear ({selectedCategories.length})</button>
+                  )}
+                </div>
+                
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Search category..."
+                    value={categorySearch}
+                    onChange={(e) => setCategorySearch(e.target.value)}
+                    className="w-full bg-gray-50 border-none rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium focus:ring-1 focus:ring-[#D97706] transition-all"
+                  />
+                </div>
 
-              <div className="space-y-3 max-h-[140px] overflow-y-auto pr-2 custom-scrollbar">
-                {availableCategories.filter(c => c.toLowerCase().includes(categorySearch.toLowerCase())).map(cat => (
-                  <label key={cat} className="flex items-center gap-3 group cursor-pointer">
-                    <div className="relative flex items-center justify-center">
-                      <input 
-                        type="checkbox"
-                        checked={selectedCategories.includes(cat)}
-                        onChange={() => toggleCategory(cat)}
-                        className="peer w-5 h-5 border-2 border-gray-100 rounded-lg appearance-none checked:bg-black checked:border-black transition-all"
-                      />
-                      <div className="absolute opacity-0 peer-checked:opacity-100 text-white transition-opacity">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <div className="space-y-3 max-h-[140px] overflow-y-auto pr-2 custom-scrollbar">
+                  {availableCategories.filter(c => c.toLowerCase().includes(categorySearch.toLowerCase())).map(cat => (
+                    <label key={cat} className="flex items-center gap-3 group cursor-pointer">
+                      <div className="relative flex items-center justify-center">
+                        <input 
+                          type="checkbox"
+                          checked={selectedCategories.includes(cat)}
+                          onChange={() => toggleCategory(cat)}
+                          className="peer w-5 h-5 border-2 border-gray-100 rounded-lg appearance-none checked:bg-black checked:border-black transition-all"
+                        />
+                        <div className="absolute opacity-0 peer-checked:opacity-100 text-white transition-opacity">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
                       </div>
-                    </div>
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest group-hover:text-black transition-colors">
-                      {cat}
-                    </span>
-                  </label>
-                ))}
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest group-hover:text-black transition-colors">
+                        {cat}
+                      </span>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="space-y-6">
               <div className="flex items-center justify-between border-b border-gray-100 pb-4">

@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, ArrowRight, Mail, Lock, ShieldCheck } from 'lucide-react';
+import { Loader2, ArrowRight, Mail, Lock } from 'lucide-react';
+import { AuthLayoutWrapper } from '@/components/auth/AuthLayoutWrapper';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,19 +26,9 @@ export default function LoginPage() {
       });
 
       if (error) throw error;
-
-      // Check if user is admin to redirect accordingly
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', data.user.id)
-        .single();
-
-      if (profile?.role === 'admin') {
-        router.push('/admin');
-      } else {
-        router.push('/');
-      }
+      
+      // Immediate redirect to synchronize session
+      window.location.href = '/';
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -46,72 +37,85 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-        <div className="p-10 space-y-8">
-          <div className="text-center space-y-2">
-            <Link href="/" className="inline-block mb-4">
-               <span className="font-heading font-black text-3xl tracking-tighter">ELITE<span className="text-[#D97706]">WEAR</span></span>
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight italic">Welcome Back</h1>
-            <p className="text-sm text-gray-500 font-medium uppercase tracking-widest">Sign in to your account</p>
+    <AuthLayoutWrapper
+      title1="LOG"
+      title2="IN"
+      subtitle="RETURNING MEMBER"
+      imageUrl="https://images.unsplash.com/photo-1594932224010-74f43a183556?q=80&w=2070&auto=format&fit=crop"
+    >
+      <div className="space-y-6">
+        {error && (
+          <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-600 text-[9px] font-black uppercase tracking-[0.3em] animate-in fade-in slide-in-from-top-2 text-center">
+            {error}
           </div>
+        )}
 
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-xs font-bold uppercase tracking-widest animate-in fade-in slide-in-from-top-2">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-4">
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <form onSubmit={handleLogin} className="space-y-6 pt-2">
+          <div className="space-y-8">
+            <div className="space-y-3">
+              <label className="text-[9px] font-black tracking-[0.4em] uppercase text-black/30 ml-1">
+                Email Identity
+              </label>
+              <div className="relative group">
+                <Mail className="absolute left-0 top-1/2 -translate-y-1/2 text-black/20 group-focus-within:text-black transition-colors" size={14} />
                 <input 
                   type="email" 
                   required
-                  placeholder="Email Address"
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#D97706] transition-all"
+                  placeholder="NAME@EXAMPLE.COM"
+                  className="w-full pl-8 pr-0 py-4 bg-transparent border-b border-black/10 text-[11px] font-bold uppercase tracking-widest focus:border-black transition-all outline-none placeholder:text-black/10"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <label className="text-[9px] font-black tracking-[0.4em] uppercase text-black/30 ml-1">
+                  Security Key
+                </label>
+                <Link href="/forgot-password" className="text-[9px] font-black text-black/40 uppercase tracking-widest hover:text-black transition-colors">
+                  Recovery?
+                </Link>
+              </div>
+              <div className="relative group">
+                <Lock className="absolute left-0 top-1/2 -translate-y-1/2 text-black/20 group-focus-within:text-black transition-colors" size={14} />
                 <input 
                   type="password" 
                   required
-                  placeholder="Password"
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#D97706] transition-all"
+                  placeholder="••••••••"
+                  className="w-full pl-8 pr-0 py-4 bg-transparent border-b border-black/10 text-[11px] font-bold uppercase tracking-widest focus:border-black transition-all outline-none placeholder:text-black/10"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
             </div>
-
-            <button 
-              disabled={loading}
-              type="submit"
-              className="w-full py-4 bg-black text-white rounded-2xl text-sm font-bold uppercase tracking-[0.2em] hover:bg-gray-800 transition-all shadow-xl shadow-black/10 active:scale-95 flex items-center justify-center gap-2"
-            >
-              {loading ? <Loader2 className="animate-spin" size={18} /> : null}
-              {loading ? 'Authenticating...' : 'Sign In'}
-              {!loading && <ArrowRight size={18} />}
-            </button>
-          </form>
-
-          <div className="text-center space-y-4 pt-4">
-            <p className="text-xs text-gray-500 font-medium">
-              Don't have an account? {' '}
-              <Link href="/signup" className="text-[#D97706] font-bold hover:underline underline-offset-4">Create Account</Link>
-            </p>
-            <div className="flex items-center justify-center gap-2 pt-4 opacity-50">
-               <ShieldCheck size={14} className="text-green-600" />
-               <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Secure Verification</span>
-            </div>
           </div>
+
+          <button 
+            disabled={loading}
+            type="submit"
+            className="w-full py-6 bg-black text-white rounded-none text-[10px] font-black uppercase tracking-[0.5em] hover:bg-gray-900 transition-all active:scale-[0.98] flex items-center justify-center gap-4 group"
+          >
+            {loading ? <Loader2 className="animate-spin" size={16} /> : null}
+            {loading ? 'AUTHENTICATING' : 'INITIALIZE ACCESS'}
+            {!loading && <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />}
+          </button>
+        </form>
+
+        <div className="text-center pt-12 space-y-4">
+          <p className="text-[9px] text-black/30 font-black uppercase tracking-[0.4em]">
+            New to the Elite circle?
+          </p>
+          <Link 
+            href="/signup" 
+            className="inline-flex items-center gap-3 text-[10px] font-black text-black uppercase tracking-[0.3em] group border-b-2 border-black/10 hover:border-black pb-2 transition-all"
+          >
+            Create your account
+            <ArrowRight size={12} className="transition-transform group-hover:translate-x-1" />
+          </Link>
         </div>
       </div>
-    </div>
+    </AuthLayoutWrapper>
   );
 }

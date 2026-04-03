@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 interface DashboardProps {
   initialStats: {
@@ -56,7 +57,7 @@ export default function DashboardClient({ initialStats }: DashboardProps) {
         stats[3],
       ];
       setStats(newStats);
-      router.refresh(); // Sync with server data if any
+      router.refresh();
     } catch (error) {
       console.error('Error fetching admin stats:', error);
     } finally {
@@ -65,100 +66,124 @@ export default function DashboardClient({ initialStats }: DashboardProps) {
   };
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-heading font-black text-black tracking-tighter italic uppercase">Dashboard</h1>
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-[0.3em] mt-1">Real-time enterprise metrics</p>
+    <div className="space-y-16 animate-in fade-in duration-1000 fill-mode-both">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-12 border-b border-gray-100">
+        <div className="space-y-4">
+          <p className="text-[9px] font-black text-black/30 uppercase tracking-[0.5em] ml-1">Archive Summary / Q2 2024</p>
+          <div className="flex flex-col leading-[0.85]">
+            <h1 className="text-[56px] font-thin tracking-tighter uppercase text-black">Control</h1>
+            <h1 className="text-[56px] font-black tracking-tighter uppercase text-black -mt-1 italic">Dashboard</h1>
+          </div>
         </div>
+        
         <button 
           onClick={fetchStats}
           disabled={loading}
-          className="p-3 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-all active:scale-95"
+          className="flex items-center gap-3 px-8 py-4 bg-black text-white text-[9px] font-black uppercase tracking-[0.4em] hover:bg-gray-900 transition-all active:scale-[0.98] group disabled:opacity-50"
         >
-          <RefreshCw size={18} className={`${loading ? 'animate-spin' : ''}`} />
+          {loading ? <Loader2 className="animate-spin" size={14} /> : <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-700" />}
+          {loading ? 'SYNCHRONIZING' : 'REFRESH METRICS'}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => {
+      {/* Primary Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px bg-gray-100 border border-gray-100">
+        {stats.map((stat, idx) => {
           const Icon = ICON_MAP[stat.iconId] || ShoppingBag;
           return (
-            <div key={stat.name} className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-black/5 transition-all group relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-full -mr-8 -mt-8 group-hover:bg-[#D97706]/5 transition-colors" />
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="p-4 bg-gray-50 rounded-2xl text-[#D97706] group-hover:bg-[#D97706] group-hover:text-white transition-all transform group-hover:rotate-6">
-                    <Icon size={24} />
-                  </div>
-                  <div className={`flex items-center text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest ${
-                    stat.changeType === 'increase' ? 'bg-green-50 text-green-600' :
-                    stat.changeType === 'decrease' ? 'bg-red-50 text-red-600' :
-                    'bg-gray-50 text-gray-400'
-                  }`}>
-                    {stat.changeType === 'increase' ? <ArrowUpRight size={10} className="mr-1" /> :
-                     stat.changeType === 'decrease' ? <ArrowDownRight size={10} className="mr-1" /> : null}
-                    {stat.change}
-                  </div>
+            <div key={stat.name} className="bg-white p-10 space-y-8 group hover:bg-[#fcfcfc] transition-colors duration-500">
+              <div className="flex items-start justify-between">
+                <div className="w-10 h-10 bg-black flex items-center justify-center text-white transition-transform group-hover:scale-110">
+                  <Icon size={16} />
                 </div>
-                <p className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.2em]">{stat.name}</p>
-                <div className="flex items-baseline gap-2 mt-1">
-                  <p className="text-4xl font-black text-black font-heading tracking-tighter">
-                    {loading ? '---' : stat.value}
-                  </p>
+                <div className={cn(
+                  "text-[8px] font-black uppercase tracking-widest px-3 py-1 border",
+                  stat.changeType === 'increase' ? "text-green-600 border-green-600/20 bg-green-50" :
+                  stat.changeType === 'decrease' ? "text-red-600 border-red-600/20 bg-red-50" :
+                  "text-black/30 border-black/5 bg-gray-50"
+                )}>
+                  {stat.change}
                 </div>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-[9px] font-black text-black/30 uppercase tracking-[0.3em]">{stat.name}</p>
+                <p className="text-[42px] font-black text-black leading-none tracking-tighter">
+                  {loading ? '---' : stat.value}
+                </p>
+              </div>
+
+              <div className="pt-4 border-t border-gray-50 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all duration-700">
+                <span className="text-[7px] font-black tracking-[0.4em] uppercase text-black/20">Operational Clear</span>
+                <ArrowUpRight size={12} className="text-black/20" />
               </div>
             </div>
           );
         })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <div className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="font-heading font-black text-xl tracking-tight italic uppercase">Recent Activity</h3>
-            <span className="text-[10px] font-bold text-[#D97706] uppercase tracking-widest">Live Updates</span>
+      {/* Secondary Information Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-px bg-gray-100 border border-gray-100">
+        {/* Activity Log */}
+        <div className="bg-white p-12 lg:col-span-2 flex flex-col justify-between min-h-[400px]">
+          <div className="space-y-2">
+             <p className="text-[9px] font-black text-black/30 uppercase tracking-[0.5em]">Real-time Event Stream</p>
+             <h3 className="text-2xl font-black tracking-tighter uppercase italic">Operational Log</h3>
           </div>
-          <div className="space-y-8">
-            <div className="text-center py-10 space-y-4">
-                 <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto text-gray-200">
-                    <ShoppingBag size={24} />
-                 </div>
-                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">No recent sales detected</p>
+
+          <div className="flex-1 flex flex-col items-center justify-center space-y-6 opacity-20">
+             <div className="w-px h-16 bg-black" />
+             <p className="text-[10px] font-black uppercase tracking-[0.8em]">No Events Recorded</p>
+             <div className="w-px h-16 bg-black" />
+          </div>
+
+          <div className="pt-8 border-t border-gray-50 flex items-center justify-between">
+            <span className="text-[8px] font-black uppercase tracking-widest text-black/10">Archive Monitor v0.4</span>
+            <div className="flex gap-1">
+              <div className="w-1 h-1 bg-black rounded-full animate-pulse" />
+              <div className="w-1 h-1 bg-black rounded-full animate-pulse delay-75" />
+              <div className="w-1 h-1 bg-black rounded-full animate-pulse delay-150" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-8 opacity-5 -mr-4 -mt-4 rotate-12 group-hover:rotate-0 transition-transform duration-700">
-            <TrendingUp size={120} />
+        {/* Rapid Deployment Shell */}
+        <div className="bg-[#fcfcfc] p-12 flex flex-col justify-between">
+          <div className="space-y-6">
+            <div className="space-y-2">
+               <p className="text-[9px] font-black text-black/30 uppercase tracking-[0.5em]">Quick Procedures</p>
+               <h3 className="text-2xl font-black tracking-tighter uppercase italic">Direct Access</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4 pt-4">
+              <Link 
+                href="/admin/products"
+                className="flex items-center justify-between p-8 bg-black text-white hover:bg-gray-900 transition-all group overflow-hidden relative active:scale-[0.98]"
+              >
+                <div className="flex flex-col gap-1 relative z-10">
+                   <span className="text-[8px] font-black uppercase tracking-[0.3em] opacity-40">System A</span>
+                   <span className="text-[10px] font-black uppercase tracking-[0.4em]">DEPLOY PRODUCT</span>
+                </div>
+                <Plus size={20} className="relative z-10 transition-transform group-hover:rotate-90 duration-500" />
+                <div className="absolute inset-0 bg-white/5 -translate-x-full group-hover:translate-x-0 transition-transform duration-700" />
+              </Link>
+
+              <Link 
+                href="/admin/homepage"
+                className="flex items-center justify-between p-8 border border-black/10 bg-white text-black hover:bg-black hover:text-white transition-all group active:scale-[0.98]"
+              >
+                <div className="flex flex-col gap-1">
+                   <span className="text-[8px] font-black uppercase tracking-[0.3em] opacity-40">System B</span>
+                   <span className="text-[10px] font-black uppercase tracking-[0.4em]">EDITORIAL SYNC</span>
+                </div>
+                <RefreshCw size={16} className="group-hover:rotate-180 transition-transform duration-700" />
+              </Link>
+            </div>
           </div>
-          <h3 className="font-heading font-black text-xl tracking-tight italic mb-8 uppercase">Quick Actions</h3>
-          <div className="grid grid-cols-1 gap-4 relative z-10">
-            <Link 
-              href="/admin/products"
-              className="flex items-center justify-between p-6 bg-black text-white rounded-3xl hover:bg-[#D97706] transition-all group/btn active:scale-95 shadow-xl shadow-black/10"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
-                  <Plus size={20} />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-[0.3em]">Add New Product</span>
-              </div>
-              <ArrowUpRight size={18} className="opacity-0 group-hover/btn:opacity-100 -translate-x-4 group-hover/btn:translate-x-0 transition-all" />
-            </Link>
-            <Link 
-               href="/admin/homepage"
-               className="flex items-center justify-between p-6 bg-gray-50 text-black rounded-3xl hover:bg-gray-100 transition-all group/btn active:scale-95 border border-gray-100"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-black/5 rounded-xl flex items-center justify-center">
-                  <RefreshCw size={18} />
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-[0.3em]">Manage Content</span>
-              </div>
-              <ArrowUpRight size={18} className="opacity-0 group-hover/btn:opacity-100 -translate-x-4 group-hover/btn:translate-x-0 transition-all" />
-            </Link>
+
+          <div className="pt-10 opacity-[0.05] pointer-events-none select-none">
+             <h4 className="text-[40px] font-black tracking-tighter italic leading-none">TERMINAL</h4>
           </div>
         </div>
       </div>

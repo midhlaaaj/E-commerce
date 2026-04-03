@@ -100,47 +100,7 @@ export const Navbar = ({ transparent = false }: NavbarProps) => {
           />
         </div>
         
-        <div className={cn("flex items-center gap-4 border-l pl-6 transition-colors", showSolid ? "border-gray-100" : "border-white/10")}>
-          {loading ? (
-             <Loader2 className="animate-spin text-gray-300" size={18} />
-          ) : user ? (
-            <div className="flex items-center gap-4">
-               {isAdmin && (
-                  <Link 
-                    href="/admin" 
-                    className={cn(
-                      "flex items-center gap-2 text-[10px] font-bold tracking-widest transition-colors uppercase",
-                      showSolid ? "text-[#D97706] hover:text-black" : "text-white hover:text-white/80"
-                    )}
-                  >
-                    <LayoutDashboard size={16} />
-                    <span className="hidden sm:inline">Admin</span>
-                  </Link>
-               )}
-               <div className="flex items-center gap-2 group cursor-pointer">
-                  <div className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors",
-                    showSolid ? "bg-gray-100 text-black" : "bg-white/10 text-white"
-                  )}>
-                    {profile?.full_name?.charAt(0) || 'U'}
-                  </div>
-                  <button onClick={signOut} className={cn("transition-colors", showSolid ? "text-gray-400 hover:text-red-600" : "text-white/60 hover:text-red-400")}>
-                    <LogOut size={18} />
-                  </button>
-               </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-4">
-              <Link href="/login" className={cn("text-[10px] font-bold tracking-widest uppercase transition-colors", showSolid ? "hover:text-[#D97706]" : "text-white hover:text-white/80")}>Login</Link>
-              <Link href="/signup" className={cn(
-                "px-5 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all",
-                showSolid ? "bg-black text-white hover:bg-gray-800" : "bg-white text-black hover:bg-gray-100"
-              )}>Join</Link>
-            </div>
-          )}
-
-          <div className={cn("w-[1px] h-4 hidden sm:block transition-colors", showSolid ? "bg-gray-100" : "bg-white/10")} />
-          
+        <div className={cn("flex items-center gap-6 transition-colors")}>
           <Link href="/wishlist" className="relative cursor-pointer group">
             <Heart className={cn(
               "w-5 h-5 transition-colors",
@@ -165,6 +125,43 @@ export const Navbar = ({ transparent = false }: NavbarProps) => {
               </Badge>
             )}
           </Link>
+
+          {loading ? (
+             <Loader2 className="animate-spin text-gray-300" size={18} />
+          ) : user ? (
+            <div className="flex items-center gap-6">
+              {isAdmin && (
+                <Link 
+                  href="/admin" 
+                  className={cn(
+                    "transition-colors",
+                    showSolid ? "text-gray-400 hover:text-[#D97706]" : "text-white/70 hover:text-white"
+                  )}
+                  title="Admin Dashboard"
+                >
+                  <LayoutDashboard size={20} />
+                </Link>
+              )}
+              <Link 
+                href="/profile" 
+                className={cn(
+                  "transition-colors",
+                  showSolid ? "text-gray-400 hover:text-black" : "text-white/70 hover:text-white"
+                )}
+                title="Your Profile"
+              >
+                <UserIcon size={20} />
+              </Link>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <Link href="/login" className={cn("text-[10px] font-bold tracking-widest uppercase transition-colors", showSolid ? "hover:text-[#D97706]" : "text-white hover:text-white/80")}>Login</Link>
+              <Link href="/signup" className={cn(
+                "px-5 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase transition-all",
+                showSolid ? "bg-black text-white hover:bg-gray-800" : "bg-white text-black hover:bg-gray-100"
+              )}>Join</Link>
+            </div>
+          )}
         </div>
       </div>
     </nav>

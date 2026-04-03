@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, ArrowRight, Mail, Lock, User, CheckCircle2 } from 'lucide-react';
+import { AuthLayoutWrapper } from '@/components/auth/AuthLayoutWrapper';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -33,7 +35,7 @@ export default function SignupPage() {
 
       if (error) throw error;
       setSuccess(true);
-      setTimeout(() => router.push('/login'), 3000);
+      setTimeout(() => window.location.href = '/', 3000);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -43,17 +45,27 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-10 text-center space-y-6">
-          <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto text-green-600">
-            <CheckCircle2 size={40} />
+      <div className="min-h-screen bg-black flex items-center justify-center p-6 relative overflow-hidden">
+        <Image 
+          src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070"
+          alt="Success Background"
+          fill
+          className="object-cover opacity-40 brightness-50"
+        />
+        <div className="w-full max-w-md bg-white border border-white/20 p-16 text-center space-y-10 relative z-10 animate-in fade-in zoom-in-95 duration-1000">
+          <div className="w-24 h-24 bg-black text-white flex items-center justify-center mx-auto shadow-2xl">
+            <CheckCircle2 size={48} />
           </div>
-          <h2 className="text-2xl font-bold tracking-tight italic">Registration Successful</h2>
-          <p className="text-gray-500 text-sm leading-relaxed">
-            Welcome to the elite circle. Redirecting you to login in a moment...
-          </p>
-          <div className="h-1 w-full bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full bg-green-600 animate-[progress_3s_linear]" />
+          <div className="space-y-4">
+            <h2 className="text-5xl font-black tracking-tighter uppercase text-black leading-none">
+              WELCOME TO <span className="font-extralight italic">ELITE</span>
+            </h2>
+            <p className="text-black/40 text-[10px] font-black uppercase tracking-[0.4em] leading-relaxed">
+              Redirecting to your collection...
+            </p>
+          </div>
+          <div className="h-[2px] w-full bg-black/5 overflow-hidden">
+            <div className="h-full bg-black animate-[progress_3s_linear]" />
           </div>
         </div>
       </div>
@@ -61,79 +73,97 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-        <div className="p-10 space-y-8">
-          <div className="text-center space-y-2">
-            <Link href="/" className="inline-block mb-4">
-               <span className="font-heading font-black text-3xl tracking-tighter">ELITE<span className="text-[#D97706]">WEAR</span></span>
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight italic">Join the Collection</h1>
-            <p className="text-sm text-gray-500 font-medium uppercase tracking-widest text-center mx-auto">Create your personalized account</p>
+    <AuthLayoutWrapper
+      title1="SIGN"
+      title2="UP"
+      subtitle="MEMBERSHIP"
+      imageUrl="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop"
+    >
+      <div className="space-y-6">
+        {error && (
+          <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-600 text-[9px] font-black uppercase tracking-[0.3em] animate-in fade-in slide-in-from-top-2 text-center">
+            {error}
           </div>
+        )}
 
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-600 text-xs font-bold uppercase tracking-widest">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSignup} className="space-y-6">
-            <div className="space-y-4">
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <form onSubmit={handleSignup} className="space-y-6 pt-2">
+          <div className="space-y-8 pb-4">
+            <div className="space-y-3">
+              <label className="text-[9px] font-black tracking-[0.4em] uppercase text-black/30 ml-1">
+                Full Designation
+              </label>
+              <div className="relative group">
+                <User className="absolute left-0 top-1/2 -translate-y-1/2 text-black/20 group-focus-within:text-black transition-colors" size={14} />
                 <input 
                   type="text" 
                   required
-                  placeholder="Full Name"
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#D97706] transition-all"
+                  placeholder="NAME NAME"
+                  className="w-full pl-8 pr-0 py-4 bg-transparent border-b border-black/10 text-[11px] font-bold uppercase tracking-widest focus:border-black transition-all outline-none placeholder:text-black/10"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                 />
               </div>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[9px] font-black tracking-[0.4em] uppercase text-black/30 ml-1">
+                Email Identity
+              </label>
+              <div className="relative group">
+                <Mail className="absolute left-0 top-1/2 -translate-y-1/2 text-black/20 group-focus-within:text-black transition-colors" size={14} />
                 <input 
                   type="email" 
                   required
-                  placeholder="Email Address"
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#D97706] transition-all"
+                  placeholder="NAME@EXAMPLE.COM"
+                  className="w-full pl-8 pr-0 py-4 bg-transparent border-b border-black/10 text-[11px] font-bold uppercase tracking-widest focus:border-black transition-all outline-none placeholder:text-black/10"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[9px] font-black tracking-[0.4em] uppercase text-black/30 ml-1">
+                Security Key
+              </label>
+              <div className="relative group">
+                <Lock className="absolute left-0 top-1/2 -translate-y-1/2 text-black/20 group-focus-within:text-black transition-colors" size={14} />
                 <input 
                   type="password" 
                   required
-                  placeholder="Password (Min. 6 chars)"
-                  className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#D97706] transition-all"
+                  placeholder="••••••••"
+                  className="w-full pl-8 pr-0 py-4 bg-transparent border-b border-black/10 text-[11px] font-bold uppercase tracking-widest focus:border-black transition-all outline-none placeholder:text-black/10"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
             </div>
-
-            <button 
-              disabled={loading}
-              type="submit"
-              className="w-full py-4 bg-black text-white rounded-2xl text-sm font-bold uppercase tracking-[0.2em] hover:bg-gray-800 transition-all shadow-xl shadow-black/10 active:scale-95 flex items-center justify-center gap-2"
-            >
-              {loading ? <Loader2 className="animate-spin" size={18} /> : null}
-              {loading ? 'Creating Account...' : 'Sign Up'}
-              {!loading && <ArrowRight size={18} />}
-            </button>
-          </form>
-
-          <div className="text-center pt-4">
-            <p className="text-xs text-gray-500 font-medium">
-              Already have an account? {' '}
-              <Link href="/login" className="text-[#D97706] font-bold hover:underline underline-offset-4">Sign In</Link>
-            </p>
           </div>
+
+          <button 
+            disabled={loading}
+            type="submit"
+            className="w-full py-6 bg-black text-white rounded-none text-[10px] font-black uppercase tracking-[0.5em] hover:bg-gray-900 transition-all active:scale-[0.98] flex items-center justify-center gap-4 group"
+          >
+            {loading ? <Loader2 className="animate-spin" size={16} /> : null}
+            {loading ? 'PROCESSING' : 'RESERVE ACCESS'}
+            {!loading && <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />}
+          </button>
+        </form>
+
+        <div className="text-center pt-12 space-y-4">
+          <p className="text-[9px] text-black/30 font-black uppercase tracking-[0.4em]">
+            Already have an account?
+          </p>
+          <Link 
+            href="/login" 
+            className="inline-flex items-center gap-3 text-[10px] font-black text-black uppercase tracking-[0.3em] group border-b-2 border-black/10 hover:border-black pb-2 transition-all"
+          >
+            Access your profile
+            <ArrowRight size={12} className="transition-transform group-hover:translate-x-1" />
+          </Link>
         </div>
       </div>
-    </div>
+    </AuthLayoutWrapper>
   );
 }

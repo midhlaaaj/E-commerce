@@ -79,36 +79,61 @@ export default function AddProductClient({ initialCategories }: AddProductClient
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [draftSaved, setDraftSaved] = useState(false);
 
-  // 1. Restore Draft on Mount
+  // 1. Restore Draft on Mount & Sync URL Context
   useEffect(() => {
-    const savedDraft = localStorage.getItem('elitewear_product_draft');
+    // Unique key per (gender + category) to prevent data bleeding
+    const draftKey = `elitewear_draft_${genderParam || 'any'}_${categoryParam || 'any'}`;
+    const savedDraft = localStorage.getItem(draftKey);
+    
     if (savedDraft) {
       try {
         const { product: savedProduct, sizes: savedSizes } = JSON.parse(savedDraft);
-        setProduct(prev => ({ ...prev, ...savedProduct }));
+        setProduct(prev => ({ 
+          ...prev, 
+          ...savedProduct,
+          // Always prioritize URL params over draft for context
+          gender: genderParam || savedProduct.gender || prev.gender,
+          category_id: categoryParam || savedProduct.category_id || prev.category_id
+        }));
         setSizes(savedSizes || []);
-        console.log('Draft restored successfully.');
       } catch (e) {
         console.error('Failed to restore draft:', e);
       }
+    } else if (genderParam || categoryParam) {
+      // Even if no draft, ensure the state respects the URL the user is on
+      setProduct(prev => ({
+        ...prev,
+        gender: genderParam || prev.gender,
+        category_id: categoryParam || prev.category_id
+      }));
     }
-  }, []);
+  }, [genderParam, categoryParam]);
 
-  // 2. Persist Draft on Change
+  // 2. Persist Draft on Change (Context-Aware)
   useEffect(() => {
+    if (!product.name && !product.description && sizes.length === 0) return;
+
     const timer = setTimeout(() => {
-      localStorage.setItem('elitewear_product_draft', JSON.stringify({ product, sizes }));
+      const draftKey = `elitewear_draft_${genderParam || 'any'}_${categoryParam || 'any'}`;
+      localStorage.setItem(draftKey, JSON.stringify({ product, sizes }));
       setDraftSaved(true);
       setTimeout(() => setDraftSaved(false), 2000);
     }, 1000);
     return () => clearTimeout(timer);
-  }, [product, sizes]);
+  }, [product, sizes, genderParam, categoryParam]);
 
   async function handleAddProduct(e: React.FormEvent) {
     e.preventDefault();
     setSubmitError(null);
-    if (!product.name || !product.price || !product.category_id || images.length === 0) {
-      setSubmitError('Please fill in all required fields and add at least one image.');
+    
+    const missingFields = [];
+    if (!product.name.trim()) missingFields.push('Product Name');
+    if (!product.price) missingFields.push('Price');
+    if (!product.category_id) missingFields.push('Category');
+    if (images.length === 0) missingFields.push('at least one image');
+
+    if (missingFields.length > 0) {
+      setSubmitError(`Please complete: ${missingFields.join(', ')}.`);
       return;
     }
 
@@ -141,7 +166,8 @@ export default function AddProductClient({ initialCategories }: AddProductClient
       }
       
       console.log('4. Success! Cleanup and Redirecting...');
-      localStorage.removeItem('elitewear_product_draft');
+      const draftKey = `elitewear_draft_${genderParam || 'any'}_${categoryParam || 'any'}`;
+      localStorage.removeItem(draftKey);
       
       // Dynamic Redirection back to source collection
       if (selectedGender) {

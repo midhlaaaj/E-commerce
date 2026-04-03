@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   description: "Experience premium fashion and lifestyle with ELITEWEAR.",
 };
 
+import { AuthProvider } from "@/hooks/useAuth";
+import { NavbarWrapper } from "@/components/layout/NavbarWrapper";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,8 +26,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={cn("min-h-screen bg-white font-sans antialiased", roboto.variable)}>
-        <Navbar transparent />
-        {children}
+        <AuthProvider>
+          <NavbarWrapper />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
