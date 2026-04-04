@@ -91,7 +91,29 @@ export const ProductCard = ({ product, badge, variant = 'default' }: ProductCard
           </div>
         )}
 
-        {/* Size Selection Overlay (Still on Image for Focus) */}
+        {/* Mobile Action Overlays */}
+        <div className="absolute top-3 right-3 flex flex-col gap-2 z-10 md:hidden opacity-90">
+          <button
+            onClick={toggleWishlist}
+            className={cn(
+              "w-8 h-8 flex items-center justify-center rounded-full shadow-lg border backdrop-blur-md transition-all active:scale-95",
+              mounted && isWishlisted ? "bg-red-50 text-red-500 border-red-100" : "bg-white/80 text-gray-500 border-white/20"
+            )}
+          >
+            <Heart size={14} fill={mounted && isWishlisted ? "currentColor" : "none"} />
+          </button>
+          <button
+            onClick={handleAddToCart}
+            className="w-8 h-8 flex items-center justify-center bg-white/80 backdrop-blur-md rounded-full shadow-lg border border-white/20 text-gray-500 active:scale-95 transition-all"
+          >
+            <ShoppingBag size={14} />
+          </button>
+        </div>
+
+        {/* Desktop Hover Overlay (Optional but nice) */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/[0.02] transition-colors pointer-events-none hidden md:block" />
+        
+        {/* Size Selection Overlay */}
         {isSelectingSize && (
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-300 z-20">
             <button 
@@ -140,7 +162,7 @@ export const ProductCard = ({ product, badge, variant = 'default' }: ProductCard
             </div>
           </Link>
           
-          <div className="flex items-center gap-1.5 pt-0.5">
+          <div className="hidden md:flex items-center gap-1.5 pt-0.5">
             <button
               onClick={toggleWishlist}
               className={cn(

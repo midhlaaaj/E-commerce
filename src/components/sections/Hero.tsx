@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -11,6 +12,11 @@ interface HeroProps {
 
 export const Hero = ({ initialData }: HeroProps) => {
   const content = initialData;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   // Support dual titles: Use | separator if present, otherwise bold the last word automatically
   const titleText = content?.title || 'MODERN | ELEGANCE';
@@ -66,36 +72,34 @@ export const Hero = ({ initialData }: HeroProps) => {
       
       {/* Content Area */}
       <div className="relative z-10 w-full px-6 md:px-20 pb-24 md:pb-32 animate-in fade-in slide-in-from-bottom-12 duration-1000">
-        <div className="max-w-4xl space-y-10">
+        <div className="max-w-4xl space-y-4 md:space-y-10">
           <p className="text-[10px] md:text-[11px] font-bold tracking-[0.5em] uppercase text-white/90">
             {content?.subtitle || 'WINTER COLLECTION 2024'}
           </p>
           
-          <div className="flex flex-col space-y-0">
+          <div className="flex flex-col space-y-0 translate-x-[-2px] md:translate-x-0 font-roboto">
             <h1 
-              style={{ fontFamily: 'var(--font-roboto), sans-serif', fontWeight: 100 }}
-              className="text-5xl md:text-9xl tracking-tight leading-none text-white uppercase drop-shadow-sm opacity-95"
+              className="text-7xl md:text-9xl font-thin tracking-tighter md:tracking-tight leading-[0.85] md:leading-none text-white uppercase drop-shadow-sm opacity-95"
             >
               {titlePart1}
             </h1>
             {titlePart2 && (
               <h1 
-                style={{ fontFamily: 'var(--font-roboto), sans-serif' }}
-                className="text-5xl md:text-9xl font-bold tracking-tighter leading-[0.85] text-white uppercase drop-shadow-md"
+                className="text-7xl md:text-9xl font-black tracking-tighter leading-[0.85] text-white uppercase drop-shadow-md"
               >
                 {titlePart2}
               </h1>
             )}
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4 pt-6">
+          <div className="flex flex-row md:flex-row items-center gap-3 md:gap-4 pt-4 md:pt-6">
             <Link href="/all">
-              <button className="bg-white text-black px-12 py-5 text-[10px] font-bold uppercase tracking-[0.2em] min-w-[180px] hover:bg-gray-200 transition-all active:scale-95 rounded-none">
-                {content?.cta_text || 'SHOP NOW'}
+              <button className="bg-white text-black px-6 py-3.5 md:px-12 md:py-5 text-[9px] md:text-[10px] font-black md:font-bold uppercase tracking-[0.2em] min-w-[140px] md:min-w-[180px] hover:bg-gray-200 transition-all active:scale-95 rounded-none">
+                {content?.cta_text || 'SHOP COLLECTION'}
               </button>
             </Link>
             <Link href="/lookbook">
-              <button className="bg-transparent border border-white/40 text-white px-12 py-5 text-[10px] font-bold uppercase tracking-[0.2em] min-w-[180px] hover:bg-white hover:text-black hover:border-white transition-all active:scale-95 rounded-none">
+              <button className="bg-transparent border border-white/40 text-white px-6 py-3.5 md:px-12 md:py-5 text-[9px] md:text-[10px] font-black md:font-bold uppercase tracking-[0.2em] min-w-[140px] md:min-w-[180px] hover:bg-white hover:text-black hover:border-white transition-all active:scale-95 rounded-none">
                 {content?.cta_secondary_text || 'LOOKBOOK'}
               </button>
             </Link>

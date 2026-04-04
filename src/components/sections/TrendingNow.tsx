@@ -46,7 +46,7 @@ export const TrendingNow = () => {
         Curated this week's most loved pieces for the modern minimalist lifestyle.
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 text-left">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6 text-left">
         {products.map((product) => (
           <div key={product.id} className="group cursor-pointer">
             <div className="aspect-[3/4] overflow-hidden rounded-2xl bg-gray-50 mb-6 relative shadow-sm group-hover:shadow-xl transition-all duration-500">

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-
+import { cn } from '@/lib/utils';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 
 interface HomepageContent {
@@ -41,12 +41,15 @@ export const Categories = ({ initialData = [] }: CategoriesProps) => {
         ctaLink="/all"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {sortedCards.map((card) => (
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-6">
+        {sortedCards.map((card, index) => (
           <Link 
             key={card.id || card.section_key} 
             href={card.cta_link || '#'}
-            className="group block"
+            className={cn(
+              "group block transition-all duration-500",
+              index === 2 ? "col-span-2 md:col-span-1 w-[calc(50%-4px)] md:w-full mx-auto" : ""
+            )}
           >
             <div className="relative aspect-[3/4] overflow-hidden rounded-sm cursor-pointer bg-gray-100 shadow-sm hover:shadow-md transition-all duration-500">
               <Image 
@@ -54,18 +57,18 @@ export const Categories = ({ initialData = [] }: CategoriesProps) => {
                 alt={card.title || 'Category'}
                 fill
                 className="object-cover transition-transform duration-1000 group-hover:scale-110"
-                sizes="(max-width: 768px) 100vw, 33vw"
+                sizes="(max-width: 768px) 50vw, 33vw"
               />
               
               {/* Overlay Gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
               
               {/* Content Overlay */}
-              <div className="absolute bottom-8 left-8 right-8 text-white">
-                <h3 className="text-3xl font-black tracking-tighter uppercase mb-2 drop-shadow-sm">
+              <div className="absolute bottom-4 md:bottom-8 left-3 md:left-8 right-3 md:right-8 text-white">
+                <h3 className="text-xl md:text-3xl font-black tracking-tighter uppercase mb-2 drop-shadow-sm leading-none">
                   {card.title}
                 </h3>
-                <div className="w-10 h-[3px] bg-[#D97706] transition-all duration-500 group-hover:w-20" />
+                <div className="w-8 md:w-10 h-[2px] md:h-[3px] bg-[#D97706] transition-all duration-500 group-hover:w-full md:group-hover:w-20" />
               </div>
             </div>
           </Link>

@@ -39,7 +39,7 @@ export const SectionHeader = ({
         )}
       </div>
       {ctaText && (
-        <div className="flex items-center">
+        <div className="hidden sm:flex items-center">
           {ctaOnClick ? (
             <button onClick={ctaOnClick} className={ctaClasses}>
               {icon && <span className="transition-transform group-hover/cta:scale-110">{icon}</span>}

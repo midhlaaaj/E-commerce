@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 
 interface MenCategoriesProps {
@@ -34,12 +35,15 @@ export const MenCategories = ({ initialData = [] }: MenCategoriesProps) => {
         icon={<ArrowRight size={14} />}
       />
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-        {categories.map((cat, i) => (
+      <div className="grid grid-cols-3 md:grid-cols-5 gap-2 md:gap-6">
+        {categories.slice(0, 10).map((cat, i) => (
           <Link 
             key={i} 
             href={`/men/${cat.name.toLowerCase().replace(/\s+/g, '-')}`}
-            className="group block"
+            className={cn(
+              "group block transition-all duration-500",
+              i >= 6 ? "hidden md:block" : "block"
+            )}
           >
             <div className="relative aspect-[3/4] overflow-hidden rounded-sm cursor-pointer bg-gray-50 shadow-sm hover:shadow-md transition-all duration-500">
               <Image 
@@ -47,17 +51,17 @@ export const MenCategories = ({ initialData = [] }: MenCategoriesProps) => {
                 alt={cat.name}
                 fill
                 className="object-cover transition-transform duration-1000 group-hover:scale-110"
-                sizes="(max-width: 768px) 100vw, 20vw"
+                sizes="(max-width: 768px) 33vw, 20vw"
               />
               {/* Overlay Gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80 group-hover:opacity-100 transition-opacity" />
               
               {/* Content Overlay */}
-              <div className="absolute bottom-6 left-6 right-6 text-white text-center">
-                <h3 className="text-xl font-black tracking-tighter uppercase mb-2 drop-shadow-sm transition-transform duration-500 group-hover:-translate-y-1">
+              <div className="absolute bottom-3 md:bottom-6 left-2 md:left-6 right-2 md:right-6 text-white text-center">
+                <h3 className="text-[10px] md:text-xl font-black tracking-tighter uppercase mb-2 drop-shadow-sm transition-transform duration-500 group-hover:-translate-y-1 leading-tight">
                   {cat.name}
                 </h3>
-                <div className="mx-auto w-8 h-[2px] bg-[#D97706] transition-all duration-500 group-hover:w-16" />
+                <div className="mx-auto w-4 md:w-8 h-[2px] bg-[#D97706] transition-all duration-500 group-hover:w-full md:group-hover:w-16" />
               </div>
             </div>
           </Link>

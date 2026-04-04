@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { ProductCard } from '@/components/product/ProductCard';
 
@@ -36,10 +38,24 @@ export const OnSaleProducts = ({ initialData = [], gender }: OnSaleProductsProps
         icon={<ArrowRight size={14} />}
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6 mb-8 md:mb-16">
+        {products.slice(0, 10).map((product, index) => (
+          <div key={product.id} className={cn(index >= 4 ? "hidden md:block" : "block")}>
+            <ProductCard product={product} />
+          </div>
         ))}
+      </div>
+
+      <div className="flex justify-center pt-10 md:hidden">
+        <Link 
+          href={gender ? `/${gender}/sale` : "/sale"}
+          className="group flex items-center gap-4 text-[10px] font-extrabold tracking-[0.3em] uppercase transition-all"
+        >
+          <span className="border-b-2 border-black pb-1 group-hover:text-gray-500 group-hover:border-gray-300">
+            EXPLORE ALL SALE PIECES
+          </span>
+          <ArrowRight size={16} className="transition-transform group-hover:translate-x-2" />
+        </Link>
       </div>
     </section>
   );
