@@ -29,7 +29,7 @@ export const WomenHero = ({ initialData }: WomenHeroProps) => {
   }
 
   return (
-    <section className="relative h-[85vh] md:h-screen w-full flex items-end overflow-hidden">
+    <section className="relative h-screen md:h-screen w-full flex items-end overflow-hidden">
       {/* Background Image Container */}
       <div className="absolute inset-0">
         {/* Desktop Image */}

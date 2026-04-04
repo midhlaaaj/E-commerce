@@ -9,7 +9,7 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookieOptions: {
-        name: 'sb-elitewear-auth',
+        name: 'sb-elitewear-user-auth',
       },
       cookies: {
         get(name: string) {
@@ -45,7 +45,7 @@ export async function createAdminClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookieOptions: {
-        name: 'sb-elitewear-auth',
+        name: 'sb-elitewear-admin-auth',
       },
       cookies: {
         get(name: string) {
@@ -63,7 +63,7 @@ export async function createAdminClient() {
         },
       },
       auth: {
-        storageKey: 'sb-elitewear-auth',
+        storageKey: 'sb-elitewear-admin-auth',
       }
     }
   )

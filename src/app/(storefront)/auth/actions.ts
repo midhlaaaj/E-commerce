@@ -11,7 +11,7 @@ export async function signOutAction() {
   
   // Optional: Force delete the cookie to be absolutely sure
   const cookieStore = await cookies();
-  cookieStore.set('sb-elitewear-auth', '', { maxAge: 0, path: '/' });
+  cookieStore.set('sb-elitewear-user-auth', '', { maxAge: 0, path: '/' });
   
   return { success: true };
 }

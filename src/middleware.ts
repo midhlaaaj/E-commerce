@@ -8,64 +8,36 @@ export async function middleware(request: NextRequest) {
     },
   })
 
-  // Supabase SSR Client for Middleware
+  const pathname = request.nextUrl.pathname
+  const isAdminRoute = pathname.startsWith('/admin')
+  
+  // Create a client for the specific route role first
+  const cookieRole = isAdminRoute ? 'admin' : 'user'
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookieOptions: {
-        // Unified cookie name across all routes
-        name: 'sb-elitewear-auth',
-      },
+      cookieOptions: { name: `sb-elitewear-${cookieRole}-auth` },
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
+        get(name: string) { return request.cookies.get(name)?.value },
         set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
+          request.cookies.set({ name, value, ...options })
+          response = NextResponse.next({ request: { headers: request.headers } })
+          response.cookies.set({ name, value, ...options })
         },
         remove(name: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
+          request.cookies.set({ name, value: '', ...options })
+          response = NextResponse.next({ request: { headers: request.headers } })
+          response.cookies.set({ name, value: '', ...options })
         },
       },
     }
   )
 
-  // Essential: Refreshing the session cookie
   const { data: { user } } = await supabase.auth.getUser()
-  const pathname = request.nextUrl.pathname
 
   // 1. PATH PROTECTION: /admin
-  // If trying to access any admin route (except the login page) without auth
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+  if (isAdminRoute && pathname !== '/admin/login') {
     if (!user) {
       const url = request.nextUrl.clone()
       url.pathname = '/admin/login'
@@ -74,17 +46,35 @@ export async function middleware(request: NextRequest) {
   }
 
   // 2. PATH PROTECTION: /profile
+  // For /profile, we allow ALREADY authenticated 'user' OR we check 'admin'
   if (pathname.startsWith('/profile') && !user) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
+    // Check if they are logged in as admin
+    const adminSupabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookieOptions: { name: 'sb-elitewear-admin-auth' },
+        cookies: {
+          get(name: string) { return request.cookies.get(name)?.value },
+          set: () => {}, // No need to set here
+          remove: () => {},
+        },
+      }
+    )
+    const { data: { user: adminUser } } = await adminSupabase.auth.getUser()
+    
+    if (!adminUser) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
   }
 
   // 3. REVERSE PROTECTION: /login, /signup, /admin/login
   // Redirect authenticated users away from these pages
   if (user && (pathname === '/login' || pathname === '/signup' || pathname === '/admin/login')) {
     const url = request.nextUrl.clone()
-    url.pathname = pathname === '/admin/login' ? '/admin' : '/'
+    url.pathname = '/'
     return NextResponse.redirect(url)
   }
 

@@ -1,32 +1,36 @@
 import { CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 export const Sustainability = () => {
   return (
-    <section className="py-12 px-6 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-16">
+    <section className="py-12 px-6 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-10 md:gap-20 border-t border-black/[0.03]">
       {/* Image Side */}
-      <div className="flex-1 w-full relative">
-        <div className="aspect-square bg-gray-200 rounded-3xl overflow-hidden shadow-2xl">
-          <img 
-            src="https://images.unsplash.com/photo-1544441893-675973e306da?q=80&w=2070&auto=format&fit=crop"
+      <div className="flex-[0.8] w-full relative max-w-md mx-auto md:mx-0">
+        <div className="aspect-square bg-gray-200 rounded-sm overflow-hidden shadow-xl relative">
+          <Image 
+            src="/conscience.jpg"
             alt="Sustainability"
-            className="w-full h-full object-cover"
+            fill
+            className="object-cover"
           />
         </div>
         {/* Floating element decorative */}
-        <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-[#D97706]/10 rounded-3xl -z-10" />
+        <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-[#D97706]/10 rounded-sm -z-10" />
       </div>
 
       {/* Content Side */}
-      <div className="flex-1 space-y-8">
+      <div className="flex-[1.2] space-y-8">
+
         <div className="space-y-4">
-          <p className="text-xs font-bold text-[#D97706] tracking-[0.2em] uppercase">
+          <h2 className="text-4xl sm:text-5xl text-[#1A1614] tracking-tighter uppercase leading-none">
+            <span className="font-light">CRAFTED WITH</span> <br />
+            <span className="font-extrabold text-5xl sm:text-6xl">CONSCIENCE</span>
+          </h2>
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.4em]">
             SUSTAINABILITY & ETHICS
           </p>
-          <h2 className="text-4xl font-heading font-bold tracking-tight leading-tight uppercase">
-            CRAFTED WITH CONSCIENCE
-          </h2>
-          <p className="text-gray-500 leading-relaxed text-sm lg:text-base">
+          <p className="text-gray-500 leading-relaxed text-sm lg:text-base pt-4">
             At EliteWear, we believe that luxury shouldn't come at a cost to our planet. Our garments are crafted using 100% organic cotton, recycled wool, and eco-friendly dyes. Every piece is a testament to longevity and timeless design.
           </p>
         </div>
@@ -37,17 +41,18 @@ export const Sustainability = () => {
             'Zero-waste manufacturing process.',
             'Carbon neutral shipping worldwide.'
           ].map((item) => (
-            <div key={item} className="flex items-center gap-4 text-sm font-semibold text-gray-800">
-              <CheckCircle2 className="w-5 h-5 text-[#D97706]" />
+            <div key={item} className="flex items-center gap-4 text-[10px] font-bold text-[#1A1614] uppercase tracking-widest">
+              <CheckCircle2 className="w-4 h-4 text-[#D97706]" />
               {item}
             </div>
           ))}
         </div>
 
-        <Button variant="outline" className="rounded-full px-10 py-6 border-black text-xs font-bold tracking-widest hover:bg-black hover:text-white transition-all">
+        <Button variant="outline" className="rounded-none px-12 py-6 border-black text-[10px] font-bold tracking-[0.2em] hover:bg-black hover:text-white transition-all active:scale-95">
           LEARN MORE
         </Button>
       </div>
     </section>
   );
 };
+

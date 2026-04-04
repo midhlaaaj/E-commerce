@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase, adminSupabase } from '@/lib/supabase';
 import { User, SupabaseClient } from '@supabase/supabase-js';
-import { signOutAction } from '@/app/(storefront)/auth/actions';
 
 interface AuthContextType {
   user: User | null;
@@ -75,25 +74,15 @@ const createAuthProvider = (Context: React.Context<AuthContextType>, client: Sup
     }, []);
 
     const signOut = async () => {
-      try {
-        // Clear local state immediately for optimistic UI
-        setUser(null);
-        setProfile(null);
-        
-        // Parallel sign out for speed: server and client
-        // The server action will specifically clear the httpOnly cookies
-        await Promise.all([
-          client.auth.signOut(),
-          signOutAction()
-        ]);
-        
-        // Force reload to completely clean up any memory/context state
-        window.location.href = '/';
-      } catch (err) {
+      // Clear local state and update UI immediately (optimistic)
+      setUser(null);
+      setProfile(null);
+      window.dispatchEvent(new CustomEvent('auth:signout'));
+
+      // Invalidate server session in the background — don't await
+      client.auth.signOut().catch((err) => {
         console.error('Sign out error:', err);
-        // Fallback reload if something goes wrong
-        window.location.href = '/';
-      }
+      });
     };
 
     const isAdmin = profile?.role === 'admin';
@@ -117,5 +106,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => (
   </UserProvider>
 );
 
-export const useAuth = () => useContext(UserContext);
+export const useAuth = () => {
+  const userAuth = useContext(UserContext);
+  const adminAuth = useContext(AdminContext);
+  
+  // Return admin auth if user auth is empty but admin has a session
+  if (!userAuth.user && adminAuth.user) {
+    return adminAuth;
+  }
+  
+  return userAuth;
+};
+
 export const useAdminAuth = () => useContext(AdminContext);
