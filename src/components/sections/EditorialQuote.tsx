@@ -12,7 +12,7 @@ export function EditorialQuote({ data }: EditorialQuoteProps) {
   const author = data?.subtitle || "ELITE EDITORIAL, VOL. IV";
 
   return (
-    <section className="py-8 md:py-10 bg-[#F8F8F8] border-y border-gray-100">
+    <section className="py-5 md:py-7 bg-[#F8F8F8] border-y border-gray-100">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
         <div className="text-[#D97706] mb-6">
           <Quote fill="currentColor" size={32} className="rotate-180" />

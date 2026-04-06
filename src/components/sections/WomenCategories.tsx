@@ -25,7 +25,7 @@ export const WomenCategories = ({ initialData = [] }: WomenCategoriesProps) => {
   ];
 
   return (
-    <section className="py-12 px-6 max-w-7xl mx-auto">
+    <section className="pt-12 pb-6 px-6 max-w-7xl mx-auto">
       <SectionHeader 
         title1="SHOP BY" 
         title2="CATEGORY" 
@@ -45,7 +45,7 @@ export const WomenCategories = ({ initialData = [] }: WomenCategoriesProps) => {
               i >= 6 ? "hidden md:block" : "block"
             )}
           >
-            <div className="relative aspect-[3/4] overflow-hidden rounded-sm cursor-pointer bg-gray-50 shadow-sm hover:shadow-md transition-all duration-500">
+            <div className="relative aspect-[3/4] overflow-hidden rounded-sm cursor-pointer bg-gray-50 transition-all duration-500">
               <Image 
                 src={cat.image_url} 
                 alt={cat.name}
@@ -61,7 +61,6 @@ export const WomenCategories = ({ initialData = [] }: WomenCategoriesProps) => {
                 <h3 className="text-[10px] md:text-xl font-black tracking-tighter uppercase mb-2 drop-shadow-sm transition-transform duration-500 group-hover:-translate-y-1 leading-tight">
                   {cat.name}
                 </h3>
-                <div className="mx-auto w-4 md:w-8 h-[2px] bg-[#D97706] transition-all duration-500 group-hover:w-full md:group-hover:w-16" />
               </div>
             </div>
           </Link>

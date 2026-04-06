@@ -34,21 +34,21 @@ export async function middleware(request: NextRequest) {
     }
   )
 
+  // Use getSession for faster check if we just need to see if a cookie exists effectively
+  // but getUser is safer. We'll stick with getUser for security but avoid double-calling.
   const { data: { user } } = await supabase.auth.getUser()
 
   // 1. PATH PROTECTION: /admin
   if (isAdminRoute && pathname !== '/admin/login') {
     if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/admin/login'
-      return NextResponse.redirect(url)
+      return NextResponse.redirect(new URL('/admin/login', request.url))
     }
   }
 
   // 2. PATH PROTECTION: /profile
-  // For /profile, we allow ALREADY authenticated 'user' OR we check 'admin'
   if (pathname.startsWith('/profile') && !user) {
-    // Check if they are logged in as admin
+    // If NOT logged in as user, check if we're logged in as admin as a fallback
+    // We only do this check if the user is visiting a profile page and is NOT a regular user
     const adminSupabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -56,7 +56,7 @@ export async function middleware(request: NextRequest) {
         cookieOptions: { name: 'sb-elitewear-admin-auth' },
         cookies: {
           get(name: string) { return request.cookies.get(name)?.value },
-          set: () => {}, // No need to set here
+          set: () => {},
           remove: () => {},
         },
       }
@@ -64,18 +64,13 @@ export async function middleware(request: NextRequest) {
     const { data: { user: adminUser } } = await adminSupabase.auth.getUser()
     
     if (!adminUser) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/'
-      return NextResponse.redirect(url)
+      return NextResponse.redirect(new URL('/', request.url))
     }
   }
 
-  // 3. REVERSE PROTECTION: /login, /signup, /admin/login
-  // Redirect authenticated users away from these pages
-  if (user && (pathname === '/login' || pathname === '/signup' || pathname === '/admin/login')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/'
-    return NextResponse.redirect(url)
+  // 3. REVERSE PROTECTION: /login, /signup
+  if (user && (pathname === '/login' || pathname === '/signup')) {
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   return response

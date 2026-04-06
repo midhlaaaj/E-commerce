@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   profile: any | null;
   loading: boolean;
+  profileLoading: boolean;
   isAdmin: boolean;
   signOut: () => Promise<void>;
 }
@@ -16,6 +17,7 @@ const UserContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   loading: true,
+  profileLoading: true,
   isAdmin: false,
   signOut: async () => {},
 });
@@ -24,6 +26,7 @@ const AdminContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   loading: true,
+  profileLoading: true,
   isAdmin: false,
   signOut: async () => {},
 });
@@ -33,8 +36,10 @@ const createAuthProvider = (Context: React.Context<AuthContextType>, client: Sup
     const [user, setUser] = useState<User | null>(null);
     const [profile, setProfile] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
+    const [profileLoading, setProfileLoading] = useState(true);
 
     const fetchProfile = async (uid: string) => {
+      setProfileLoading(true);
       try {
         const { data } = await client
           .from('profiles')
@@ -45,28 +50,43 @@ const createAuthProvider = (Context: React.Context<AuthContextType>, client: Sup
       } catch (err) {
         console.error('Error fetching profile:', err);
       } finally {
-        setLoading(false);
+        setProfileLoading(false);
       }
     };
 
     useEffect(() => {
+      // 1. Initial Session Check (Fastest)
       client.auth.getSession()
         .then(({ data: { session } }) => {
-          setUser(session?.user ?? null);
-          if (session?.user) fetchProfile(session.user.id);
-          else setLoading(false);
+          const currentUser = session?.user ?? null;
+          setUser(currentUser);
+          
+          // Mark session loading as done immediately
+          setLoading(false);
+          
+          if (currentUser) {
+            fetchProfile(currentUser.id);
+          } else {
+            setProfileLoading(false);
+          }
         })
         .catch((err) => {
           console.error('Session fetching error:', err);
           setLoading(false);
+          setProfileLoading(false);
         });
 
+      // 2. Auth State Change listener
       const { data: { subscription } } = client.auth.onAuthStateChange(async (event, session) => {
-        setUser(session?.user ?? null);
-        if (session?.user) await fetchProfile(session.user.id);
-        else {
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        setLoading(false);
+
+        if (currentUser) {
+          await fetchProfile(currentUser.id);
+        } else {
           setProfile(null);
-          setLoading(false);
+          setProfileLoading(false);
         }
       });
 
@@ -74,12 +94,13 @@ const createAuthProvider = (Context: React.Context<AuthContextType>, client: Sup
     }, []);
 
     const signOut = async () => {
-      // Clear local state and update UI immediately (optimistic)
+      // Optimistic instant checkout
       setUser(null);
       setProfile(null);
+      setProfileLoading(false);
+      setLoading(false);
       window.dispatchEvent(new CustomEvent('auth:signout'));
 
-      // Invalidate server session in the background — don't await
       client.auth.signOut().catch((err) => {
         console.error('Sign out error:', err);
       });
@@ -88,7 +109,7 @@ const createAuthProvider = (Context: React.Context<AuthContextType>, client: Sup
     const isAdmin = profile?.role === 'admin';
 
     return (
-      <Context.Provider value={{ user, profile, loading, isAdmin, signOut }}>
+      <Context.Provider value={{ user, profile, loading, profileLoading, isAdmin, signOut }}>
         {children}
       </Context.Provider>
     );
@@ -110,7 +131,6 @@ export const useAuth = () => {
   const userAuth = useContext(UserContext);
   const adminAuth = useContext(AdminContext);
   
-  // Return admin auth if user auth is empty but admin has a session
   if (!userAuth.user && adminAuth.user) {
     return adminAuth;
   }

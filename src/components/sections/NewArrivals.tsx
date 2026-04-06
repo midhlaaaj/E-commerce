@@ -18,7 +18,7 @@ export const NewArrivals = ({ initialData = [], gender }: NewArrivalsProps) => {
   if (products.length === 0) return null;
 
   return (
-    <section className="py-12 px-6 max-w-7xl mx-auto">
+    <section className="pt-6 pb-4 px-6 max-w-7xl mx-auto">
       <SectionHeader 
         title1="NEW" 
         title2="ARRIVALS" 
@@ -39,7 +39,7 @@ export const NewArrivals = ({ initialData = [], gender }: NewArrivalsProps) => {
         ))}
       </div>
 
-      <div className="flex justify-center pt-10 md:hidden">
+      <div className="flex justify-center pt-4 md:hidden">
         <Link 
           href={gender ? `/${gender}/new-arrivals` : "/new-arrivals"}
           className="group flex items-center gap-4 text-[10px] font-extrabold tracking-[0.3em] uppercase transition-all"

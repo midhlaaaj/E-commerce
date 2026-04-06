@@ -32,7 +32,7 @@ export const Categories = ({ initialData = [] }: CategoriesProps) => {
   const sortedCards = [...cards].sort((a, b) => ORDER.indexOf(a.section_key) - ORDER.indexOf(b.section_key));
 
   return (
-    <section className="py-12 px-6 max-w-7xl mx-auto">
+    <section className="pt-12 pb-6 px-6 max-w-7xl mx-auto">
       <SectionHeader 
         title1="SHOP BY" 
         title2="GENDER" 
@@ -68,7 +68,6 @@ export const Categories = ({ initialData = [] }: CategoriesProps) => {
                 <h3 className="text-xl md:text-3xl font-black tracking-tighter uppercase mb-2 drop-shadow-sm leading-none">
                   {card.title}
                 </h3>
-                <div className="w-8 md:w-10 h-[2px] md:h-[3px] bg-[#D97706] transition-all duration-500 group-hover:w-full md:group-hover:w-20" />
               </div>
             </div>
           </Link>

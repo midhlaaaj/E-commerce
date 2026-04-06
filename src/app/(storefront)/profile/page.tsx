@@ -1,14 +1,150 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
-import { User, Mail, Phone, Calendar } from 'lucide-react';
-import { SectionHeader } from '@/components/layout/SectionHeader';
+import { ChevronDown } from 'lucide-react';
+
+// Unified Date Picker (Matching 'Sort By' design)
+// Defined OUTSIDE to prevent re-mounting and state loss on every parent render
+const UnifiedDatePicker = ({ 
+  value, 
+  onChange, 
+  disabled 
+}: { 
+  value: string, 
+  onChange: (date: string) => void,
+  disabled: boolean
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [year, month, day] = value ? value.split('-') : ['', '', ''];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const years = Array.from({ length: 101 }, (_, i) => (new Date().getFullYear() - i).toString());
+  const months = [
+    { label: 'JAN', value: '01' }, { label: 'FEB', value: '02' }, { label: 'MAR', value: '03' },
+    { label: 'APR', value: '04' }, { label: 'MAY', value: '05' }, { label: 'JUN', value: '06' },
+    { label: 'JUL', value: '07' }, { label: 'AUG', value: '08' }, { label: 'SEP', value: '09' },
+    { label: 'OCT', value: '10' }, { label: 'NOV', value: '11' }, { label: 'DEC', value: '12' }
+  ];
+  const days = Array.from({ length: 31 }, (_, i) => (i + 1).toString().padStart(2, '0'));
+
+  const monthLabel = months.find(m => m.value === month)?.label || 'MM';
+  const displayDate = value && year && month && day ? `${day} ${monthLabel} ${year}` : 'SELECT DATE';
+
+  const handleSelect = (type: 'day' | 'month' | 'year', val: string) => {
+    const newValues = {
+      day: type === 'day' ? val : day,
+      month: type === 'month' ? val : month,
+      year: type === 'year' ? val : year,
+    };
+    if (newValues.day && newValues.month && newValues.year) {
+      onChange(`${newValues.year}-${newValues.month}-${newValues.day}`);
+    } else {
+      onChange(`${newValues.year || ''}-${newValues.month || ''}-${newValues.day || ''}`.replace(/-+$/, ''));
+    }
+  };
+
+  return (
+    <div className="relative w-full sm:w-[280px]" ref={dropdownRef}>
+      <button
+        type="button"
+        disabled={disabled}
+        onMouseDown={(e) => {
+          if (disabled) return;
+          setIsOpen(!isOpen);
+        }}
+        className={cn(
+          "w-full flex items-center justify-between gap-8 px-6 py-3 border border-gray-100 bg-white text-[10px] font-black uppercase tracking-[0.2em] transition-all rounded-none outline-none focus:outline-none",
+          !disabled && "hover:border-black hover:shadow-lg hover:shadow-black/5 cursor-pointer",
+          disabled && "opacity-50 cursor-not-allowed bg-gray-50/50 grayscale pointer-events-none"
+        )}
+      >
+        <span className={cn(value ? "text-black" : "text-gray-400 font-bold")}>{displayDate}</span>
+        <ChevronDown size={14} className={cn("transition-transform duration-300 text-gray-400 font-bold", isOpen && "rotate-180")} />
+      </button>
+
+      {isOpen && !disabled && (
+        <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-100 shadow-2xl z-[999] animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="grid grid-cols-3 divide-x divide-gray-100">
+            {/* Day Column */}
+            <div className="max-h-[220px] overflow-y-auto bg-white [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {days.map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onMouseDown={(e) => { e.preventDefault(); handleSelect('day', d); }}
+                  className={cn(
+                    "w-full text-center py-3 text-[10px] font-black uppercase tracking-widest transition-colors",
+                    day === d ? "bg-black text-white" : "text-gray-400 hover:bg-gray-50 hover:text-black"
+                  )}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+            {/* Month Column */}
+            <div className="max-h-[220px] overflow-y-auto bg-white [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {months.map((m) => (
+                <button
+                  key={m.value}
+                  type="button"
+                  onMouseDown={(e) => { e.preventDefault(); handleSelect('month', m.value); }}
+                  className={cn(
+                    "w-full text-center py-3 text-[10px] font-black uppercase tracking-widest transition-colors",
+                    month === m.value ? "bg-black text-white" : "text-gray-400 hover:bg-gray-50 hover:text-black"
+                  )}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+            {/* Year Column */}
+            <div className="max-h-[220px] overflow-y-auto bg-white [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {years.map((y) => (
+                <button
+                  key={y}
+                  type="button"
+                  onMouseDown={(e) => { e.preventDefault(); handleSelect('year', y); }}
+                  className={cn(
+                    "w-full text-center py-3 text-[10px] font-black uppercase tracking-widest transition-colors",
+                    year === y ? "bg-black text-white" : "text-gray-400 hover:bg-gray-50 hover:text-black"
+                  )}
+                >
+                  {y}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="p-4 border-t border-gray-100 flex justify-end bg-gray-50/10">
+             <button 
+               type="button"
+               onMouseDown={(e) => { e.preventDefault(); setIsOpen(false); }}
+               className="text-[9px] font-black uppercase tracking-widest text-black hover:underline"
+             >
+               Confirm
+             </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function ProfileDetailsPage() {
   const { user, profile } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
@@ -41,12 +177,13 @@ export default function ProfileDetailsPage() {
         .update({
           full_name: formData.full_name,
           phone: formData.phone,
-          birthday: formData.birthday,
+          birthday: formData.birthday || null,
         })
         .eq('id', user?.id);
 
       if (error) throw error;
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      setIsEditing(false);
     } catch (err: any) {
       console.error('Update error:', err);
       setMessage({ type: 'error', text: err.message || 'Failed to update profile' });
@@ -56,78 +193,67 @@ export default function ProfileDetailsPage() {
   };
 
   return (
-    <div className="max-w-4xl">
-      <SectionHeader 
-        title1="PROFILE" 
-        title2="DETAILS" 
-        subtitle="PERSONAL INFORMATION"
-        className="mb-12"
-      />
-
-      <form onSubmit={handleUpdate} className="space-y-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+    <div className="animate-in fade-in duration-700">
+      <form onSubmit={handleUpdate} className="space-y-12 max-w-5xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-12">
           {/* Full Name */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold tracking-widest uppercase text-gray-500 ml-1">
+          <div className="space-y-2 border-b border-gray-100 pb-1 group focus-within:border-black transition-colors">
+            <label className="text-[9px] font-black tracking-[0.2em] uppercase text-gray-400 block">
               Full Name
             </label>
-            <div className="relative group">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D97706] transition-colors" size={18} />
-              <input
-                type="text"
-                value={formData.full_name}
-                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-6 text-sm focus:ring-2 focus:ring-[#D97706]/20 transition-all outline-none"
-                placeholder="John Doe"
-              />
-            </div>
+            <input
+              type="text"
+              disabled={!isEditing}
+              value={formData.full_name}
+              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+              className="w-full bg-transparent py-2 text-[11px] font-black tracking-widest uppercase outline-none disabled:text-gray-500 transition-all font-sans"
+              placeholder="Full Name"
+            />
           </div>
 
-          {/* Email (Read Only) */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold tracking-widest uppercase text-gray-500 ml-1">
+          {/* Email Address */}
+          <div className="space-y-2 border-b border-gray-100 pb-1 opacity-70">
+            <label className="text-[9px] font-black tracking-[0.2em] uppercase text-gray-400 block">
               Email Address
             </label>
-            <div className="relative group opacity-60">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="email"
-                value={formData.email}
-                readOnly
-                className="w-full bg-gray-100 border-none rounded-2xl py-4 pl-12 pr-6 text-sm outline-none cursor-not-allowed"
-              />
-            </div>
+            <input
+              type="email"
+              value={formData.email}
+              readOnly
+              className="w-full bg-transparent py-2 text-[11px] font-bold tracking-widest outline-none cursor-not-allowed italic font-sans"
+              placeholder="admin@gmail.com"
+            />
           </div>
 
-          {/* Phone */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold tracking-widest uppercase text-gray-500 ml-1">
+          {/* Phone Number */}
+          <div className="space-y-2 border-b border-gray-100 pb-1 group focus-within:border-black transition-colors">
+            <label className="text-[9px] font-black tracking-[0.2em] uppercase text-gray-400 block">
               Phone Number
             </label>
-            <div className="relative group">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D97706] transition-colors" size={18} />
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-6 text-sm focus:ring-2 focus:ring-[#D97706]/20 transition-all outline-none"
-                placeholder="+1 234 567 890"
-              />
-            </div>
+            <input
+              type="tel"
+              disabled={!isEditing}
+              value={formData.phone}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '');
+                if (val.length <= 10) setFormData({ ...formData, phone: val });
+              }}
+              maxLength={10}
+              className="w-full bg-transparent py-2 text-[11px] font-black tracking-widest outline-none disabled:text-gray-500 transition-all font-mono"
+              placeholder="0000000000"
+            />
           </div>
 
-          {/* Birthday */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold tracking-widest uppercase text-gray-500 ml-1">
-              Birthday
+          {/* Birthday Dropdowns */}
+          <div className="space-y-4 md:col-span-2">
+            <label className="text-[9px] font-black tracking-[0.2em] uppercase text-gray-400 block">
+              Date of Birth
             </label>
-            <div className="relative group">
-              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#D97706] transition-colors" size={18} />
-              <input
-                type="date"
-                value={formData.birthday}
-                onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
-                className="w-full bg-gray-50 border-none rounded-2xl py-4 pl-12 pr-6 text-sm focus:ring-2 focus:ring-[#D97706]/20 transition-all outline-none"
+            <div className="flex flex-col sm:flex-row gap-4">
+              <UnifiedDatePicker 
+                value={formData.birthday} 
+                onChange={(date) => setFormData({ ...formData, birthday: date })} 
+                disabled={!isEditing} 
               />
             </div>
           </div>
@@ -135,21 +261,44 @@ export default function ProfileDetailsPage() {
 
         {message && (
           <div className={cn(
-            "p-4 rounded-2xl text-xs font-medium tracking-wide animate-in fade-in slide-in-from-top-2 duration-300",
+            "p-5 text-[10px] font-black tracking-[0.2em] uppercase text-left animate-in fade-in slide-in-from-top-2 duration-300",
             message.type === 'success' ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
           )}>
             {message.text}
           </div>
         )}
 
-        <div className="pt-6">
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-12 py-4 bg-black text-white hover:bg-gray-800 disabled:bg-gray-400 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase transition-all shadow-xl shadow-black/5 active:scale-[0.98]"
-          >
-            {loading ? 'Saving...' : 'Save Changes'}
-          </button>
+        <div className="pt-6 flex flex-wrap gap-6 items-center">
+          {!isEditing ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsEditing(true);
+              }}
+              className="bg-[#2D2D2D] text-white px-12 py-5 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-black transition-all active:scale-95 shadow-lg shadow-black/5"
+            >
+              Edit Profile
+            </button>
+          ) : (
+            <>
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-[#2D2D2D] text-white px-12 py-5 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-black transition-all active:scale-95 shadow-lg shadow-black/5 disabled:opacity-50"
+              >
+                {loading ? 'Wait...' : 'Save Changes'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsEditing(false)}
+                className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-black transition-colors"
+              >
+                Cancel
+              </button>
+            </>
+          )}
         </div>
       </form>
     </div>

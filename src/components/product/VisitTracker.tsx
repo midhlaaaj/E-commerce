@@ -24,6 +24,9 @@ export const VisitTracker = ({ productId }: VisitTrackerProps) => {
       const limitedHistory = history.slice(0, 10);
 
       localStorage.setItem('recently-visited', JSON.stringify(limitedHistory));
+      
+      // Dispatch custom event for same-window sync
+      window.dispatchEvent(new CustomEvent('recently-visited-updated'));
     } catch (error) {
       console.error('Error tracking visit:', error);
     }

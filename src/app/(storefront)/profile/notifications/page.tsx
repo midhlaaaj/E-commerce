@@ -5,19 +5,14 @@ import { SectionHeader } from '@/components/layout/SectionHeader';
 
 export default function NotificationsPage() {
   return (
-    <div className="max-w-4xl">
-      <SectionHeader 
-        title1="MY" 
-        title2="NOTIFICATIONS" 
-        subtitle="STAY INFORMED"
-        className="mb-12"
-      />
+    <div className="animate-in fade-in duration-700">
+
 
       <div className="space-y-6">
         <div className="p-8 rounded-3xl bg-gray-50/50 flex flex-col items-center justify-center text-center opacity-40 grayscale min-h-[300px]">
           <Bell size={48} className="text-gray-300 mb-6 animate-pulse" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Staying Informed</h3>
-          <p className="text-sm text-gray-500 max-w-xs mx-auto">
+          <h3 className="text-sm font-black uppercase tracking-widest text-[#2D2D2D] mb-4">Staying Informed</h3>
+          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-12 max-w-xs leading-relaxed">
             You'll receive notifications about your orders, returns, and special offers here. 
             Currently, there are no new updates.
           </p>

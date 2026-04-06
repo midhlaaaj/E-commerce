@@ -4,9 +4,11 @@ import { persist } from 'zustand/middleware';
 export interface CartItem {
   id: string;
   name: string;
-  price: number;
+  price: number; // Discounted Price
+  originalPrice: number; // Original MRP
   image: string;
   size: string;
+  color?: string;
   quantity: number;
 }
 
@@ -18,13 +20,17 @@ interface CartState {
   clearCart: () => void;
   totalItems: () => number;
   subtotal: () => number;
+  totalMRP: () => number;
+  totalSavings: () => number;
+  selectedAddressId: string | null;
+  setSelectedAddressId: (id: string | null) => void;
 }
 
 export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
-      
+
       addItem: (product, size) => set((state) => {
         const existingItem = state.items.find(
           (item) => item.id === product.id && item.size === size
@@ -44,8 +50,10 @@ export const useCartStore = create<CartState>()(
           id: product.id,
           name: product.name,
           price: product.offer_price || product.price,
+          originalPrice: product.price,
           image: product.images?.[0] || '',
           size,
+          color: product.color || undefined,
           quantity: 1,
         };
 
@@ -67,8 +75,18 @@ export const useCartStore = create<CartState>()(
       clearCart: () => set({ items: [] }),
 
       totalItems: () => get().items.reduce((acc, item) => acc + item.quantity, 0),
-      
+
       subtotal: () => get().items.reduce((acc, item) => acc + (item.price * item.quantity), 0),
+
+      totalMRP: () => get().items.reduce((acc, item) => acc + (item.originalPrice * item.quantity), 0),
+
+      totalSavings: () => {
+        const mrp = get().totalMRP();
+        const discount = get().subtotal();
+        return Math.max(0, mrp - discount);
+      },
+      selectedAddressId: null,
+      setSelectedAddressId: (id) => set({ selectedAddressId: id }),
     }),
     {
       name: 'elitewear-cart-storage',

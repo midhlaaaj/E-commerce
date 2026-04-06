@@ -28,7 +28,7 @@ export const OnSaleProducts = ({ initialData = [], gender }: OnSaleProductsProps
   if (products.length === 0) return null;
 
   return (
-    <section className="py-12 px-6 max-w-7xl mx-auto">
+    <section className="pt-12 pb-4 px-6 max-w-7xl mx-auto">
       <SectionHeader 
         title1="ON" 
         title2="SALE" 
@@ -38,7 +38,7 @@ export const OnSaleProducts = ({ initialData = [], gender }: OnSaleProductsProps
         icon={<ArrowRight size={14} />}
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6 mb-8 md:mb-16">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6 mb-4">
         {products.slice(0, 10).map((product, index) => (
           <div key={product.id} className={cn(index >= 4 ? "hidden md:block" : "block")}>
             <ProductCard product={product} />
