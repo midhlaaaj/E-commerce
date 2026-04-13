@@ -10,7 +10,9 @@ import {
   Home,
   LogOut,
   ChevronDown,
-  User as UserIcon
+  User as UserIcon,
+  Images,
+  ShoppingBag
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -43,6 +45,8 @@ export default function AdminSidebar({ user, profile }: SidebarProps) {
       subItems: ['Men', 'Women', 'Kids']
     },
     { icon: Home, label: 'Homepage Content', href: '/admin/homepage' },
+    { icon: Images, label: 'Sliders', href: '/admin/sliders' },
+    { icon: ShoppingBag, label: 'Orders', href: '/admin/orders' },
   ];
 
   const { signOut } = useAdminAuth();

@@ -1,102 +1,74 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Trash2 } from 'lucide-react';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { supabase } from '@/lib/supabase';
 import { ProductCard, type Product } from '@/components/product/ProductCard';
 
 export const RecentlyVisited = ({ hideWhenEmpty = false }: { hideWhenEmpty?: boolean }) => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [hasHistory, setHasHistory] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
 
-  // Stable reference — prevents useEffect from firing on every render
-  const loadHistory = useCallback(async () => {
-    if (typeof window === 'undefined') return;
-
+  // 1. Fetch History from LocalStorage
+  const history = useMemo(() => {
+    if (typeof window === 'undefined') return [];
     try {
       const historyJson = localStorage.getItem('recently-visited');
-      const history: string[] = historyJson ? JSON.parse(historyJson) : [];
-      const validHistory = history.filter(id => typeof id === 'string' && id.length > 0);
-
-      if (validHistory.length === 0) {
-        setProducts([]);
-        setHasHistory(false);
-        setLoading(false);
-        return;
-      }
-
-      setHasHistory(true);
-
-      // Race the Supabase query against a 6s timeout to prevent infinite skeleton
-      const queryPromise = supabase
-        .from('products')
-        .select('*, categories(name)')
-        .in('id', validHistory);
-
-      const timeoutPromise = new Promise<{ data: null; error: Error }>((resolve) =>
-        setTimeout(() => resolve({ data: null, error: new Error('Query timeout') }), 6000)
-      );
-
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
-
-      if (error) {
-        console.error('RecentlyVisited Error:', error.message);
-        return;
-      }
-
-      if (data) {
-        const sortedData = validHistory
-          .map(id => {
-            const product = (data as any[]).find((p: any) => p.id === id);
-            if (!product) return null;
-            return {
-              ...product,
-              category: product.categories || { name: 'Collection' }
-            };
-          })
-          .filter(Boolean) as Product[];
-
-        setProducts(sortedData);
-      }
-    } catch (err) {
-      console.error('RecentlyVisited Exception:', err);
-    } finally {
-      setLoading(false);
+      const parsed: string[] = historyJson ? JSON.parse(historyJson) : [];
+      return parsed.filter(id => typeof id === 'string' && id.length > 0);
+    } catch {
+      return [];
     }
-  }, []); // Empty deps — loadHistory never changes identity
+  }, [hasMounted]);
+
+  // 2. Fetch Products via React Query
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: ['recently-visited', history],
+    queryFn: async () => {
+      if (history.length === 0) return [];
+
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          categories(name)
+        `)
+        .in('id', history);
+
+      if (error) throw error;
+
+      // Keep original order
+      return history
+        .map(id => {
+          const product = (data as any[]).find((p: any) => p.id === id);
+          if (!product) return null;
+          return {
+            ...product,
+            category: product.categories || { name: 'Collection' }
+          };
+        })
+        .filter(Boolean) as Product[];
+    },
+    enabled: history.length > 0
+  });
 
   useEffect(() => {
     setHasMounted(true);
-    loadHistory();
 
-    // Sync across tabs when history changes in another tab
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === 'recently-visited') loadHistory();
+    const handleUpdate = () => {
+      // Re-trigger history memo update
+      setHasMounted(prev => !prev);
     };
 
-    const handleCustomUpdate = () => {
-      loadHistory();
-    };
-
-    window.addEventListener('storage', handleStorage);
-    window.addEventListener('recently-visited-updated', handleCustomUpdate);
-    window.addEventListener('focus', loadHistory); // Also refresh on focus
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('recently-visited-updated', handleUpdate);
     
     return () => {
-      window.removeEventListener('storage', handleStorage);
-      window.removeEventListener('recently-visited-updated', handleCustomUpdate);
-      window.removeEventListener('focus', loadHistory);
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('recently-visited-updated', handleUpdate);
     };
-  }, [loadHistory]);
-
-  const clearHistory = () => {
-    localStorage.removeItem('recently-visited');
-    setProducts([]);
-    setHasHistory(false);
-  };
+  }, []);
 
   // Don't render until hydrated
   if (!hasMounted) return null;
@@ -109,8 +81,12 @@ export const RecentlyVisited = ({ hideWhenEmpty = false }: { hideWhenEmpty?: boo
         title1="STILL"
         title2="CONSIDERING?"
         subtitle="ITEMS FROM YOUR RECENT JOURNEY"
-        ctaText={(hasHistory && products.length > 0) ? "CLEAR HISTORY" : undefined}
-        ctaOnClick={clearHistory}
+        ctaText={products.length > 0 ? "CLEAR HISTORY" : undefined}
+        ctaOnClick={() => {
+          localStorage.removeItem('recently-visited');
+          // Re-trigger history update
+          setHasMounted(prev => !prev);
+        }}
         icon={<Trash2 size={14} />}
       />
 

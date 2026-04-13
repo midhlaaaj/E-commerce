@@ -12,7 +12,13 @@ interface Props {
 export default async function GenderCategoryPage({ params }: Props) {
   const { gender, category: categorySlug } = await params;
   
-  if (!['men', 'women', 'kids'].includes(gender)) {
+  // Guard against non-standard genders and system routes
+  const validGenders = ['men', 'women', 'kids'];
+  if (!validGenders.includes(gender.toLowerCase())) {
+    // If it's a system route like 'profile', we should not return notFound here
+    // as it might be handled by a more specific static route.
+    // However, if we reached here, it means no static route matched.
+    // We only return notFound if it's definitely NOT one of our genders.
     return notFound();
   }
 

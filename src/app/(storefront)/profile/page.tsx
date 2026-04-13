@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
 
@@ -142,8 +141,10 @@ const UnifiedDatePicker = ({
   );
 };
 
+export const dynamic = 'force-dynamic';
+
 export default function ProfileDetailsPage() {
-  const { user, profile } = useAuth();
+  const { user, profile, signOut, supabase } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -194,7 +195,7 @@ export default function ProfileDetailsPage() {
 
   return (
     <div className="animate-in fade-in duration-700">
-      <form onSubmit={handleUpdate} className="space-y-12 max-w-5xl">
+      <form onSubmit={handleUpdate} className="space-y-8 md:space-y-12 max-w-5xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-12">
           {/* Full Name */}
           <div className="space-y-2 border-b border-gray-100 pb-1 group focus-within:border-black transition-colors">
@@ -270,17 +271,36 @@ export default function ProfileDetailsPage() {
 
         <div className="pt-6 flex flex-wrap gap-6 items-center">
           {!isEditing ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsEditing(true);
-              }}
-              className="bg-[#2D2D2D] text-white px-12 py-5 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-black transition-all active:scale-95 shadow-lg shadow-black/5"
-            >
-              Edit Profile
-            </button>
+            <div className="flex flex-nowrap gap-3 sm:gap-4 items-center">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsEditing(true);
+                }}
+                className="bg-black text-white px-6 py-3.5 sm:px-12 sm:py-5 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] hover:bg-black/90 transition-all active:scale-95 shadow-xl shadow-black/10 flex-1 sm:flex-none whitespace-nowrap"
+              >
+                Edit Profile
+              </button>
+              <button
+                type="button"
+                onClick={async (e) => {
+                  e.preventDefault();
+                  setLoading(true);
+                  try {
+                    await signOut();
+                  } catch (err) {
+                    console.error('Logout error:', err);
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+                className="bg-red-600 text-white px-6 py-3.5 sm:px-12 sm:py-5 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] hover:bg-red-700 transition-all active:scale-95 shadow-xl shadow-red-900/10 disabled:opacity-50 flex-1 sm:flex-none whitespace-nowrap"
+              >
+                {loading ? 'WAIT...' : 'Log Out'}
+              </button>
+            </div>
           ) : (
             <>
               <button

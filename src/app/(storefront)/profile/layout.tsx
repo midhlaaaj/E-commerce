@@ -24,7 +24,7 @@ export default function ProfileLayout({
   }, [user, loading, router]);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pt-24 md:pt-28">
+    <div className="min-h-screen bg-white flex flex-col pt-20 md:pt-28">
       {/* Left-Aligned Header Section within Centered Container */}
       <div className="max-w-7xl mx-auto w-full px-6 md:px-12 mb-2 animate-in fade-in slide-in-from-left-4 duration-700">
         <Link 
@@ -48,7 +48,7 @@ export default function ProfileLayout({
       {/* Horizontal Navigation (Left Aligned within Centered Container) */}
       <ProfileNav />
 
-      <div className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-12 pb-20 mt-0 animate-in fade-in duration-1000">
+      <div className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-12 pb-12 md:pb-20 mt-0 animate-in fade-in duration-1000">
         {children}
       </div>
       <Footer />

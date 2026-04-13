@@ -6,6 +6,8 @@ import { NewArrivals } from '@/components/sections/NewArrivals';
 import { OnSaleProducts } from '@/components/sections/OnSaleProducts';
 import { createClient } from '@/lib/supabaseServer';
 
+export const dynamic = 'force-dynamic';
+
 export default async function MenPage() {
   const supabase = await createClient();
 

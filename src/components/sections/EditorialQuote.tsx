@@ -1,3 +1,6 @@
+'use client';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 import { Quote } from 'lucide-react';
 
 interface EditorialQuoteProps {
@@ -7,7 +10,21 @@ interface EditorialQuoteProps {
   };
 }
 
-export function EditorialQuote({ data }: EditorialQuoteProps) {
+export function EditorialQuote({ data: initialData }: EditorialQuoteProps) {
+  const { data = initialData } = useQuery({
+    queryKey: ['homepage_content', 'editorial_quote'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('homepage_content')
+        .select('*')
+        .eq('section_key', 'editorial_quote')
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    initialData: initialData
+  });
+
   const quoteText = data?.title || "Style is not a fleeting moment, but a permanent archive of who we are and where we've been.";
   const author = data?.subtitle || "ELITE EDITORIAL, VOL. IV";
 

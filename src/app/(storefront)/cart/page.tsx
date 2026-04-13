@@ -8,7 +8,6 @@ import { OrderSummary } from '@/components/cart/OrderSummary';
 import { ShoppingBag, ChevronLeft, CheckCircle2, ArrowRight, Loader2 } from 'lucide-react';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/lib/supabase';
 
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
@@ -18,7 +17,7 @@ import { ShippingAddress } from '@/components/cart/ShippingAddress';
 import { Skeleton } from '@/components/profile/ProfileSkeleton';
 
 export default function CartPage() {
-  const { user } = useAuth();
+  const { user, supabase } = useAuth();
   const { items, totalItems, clearCart, subtotal, selectedAddressId } = useCartStore();
   const [isLoaded, setIsLoaded] = useState(false);
   const [isOrdered, setIsOrdered] = useState(false);
@@ -44,12 +43,14 @@ export default function CartPage() {
       return;
     }
 
+    console.log('[DEBUG CHECKOUT] Starting...', { userId: user.id, selectedAddressId });
     setIsCheckingOut(true);
     try {
       const currentSubtotal = subtotal();
       const shipping = currentSubtotal > 999 ? 0 : 150;
       const totalAmount = currentSubtotal + shipping;
 
+      console.log('[DEBUG CHECKOUT] Inserting order...', { totalAmount });
       // 1. Create the order
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -63,7 +64,12 @@ export default function CartPage() {
         .select()
         .single();
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.error('[DEBUG CHECKOUT] Order Insert Error:', orderError);
+        throw orderError;
+      }
+
+      console.log('[DEBUG CHECKOUT] Order created successfully:', order.id);
 
       // 2. Create order items
       const orderItems = items.map(item => ({
@@ -77,19 +83,31 @@ export default function CartPage() {
         product_image: item.image
       }));
 
+      console.log('[DEBUG CHECKOUT] Inserting order items...', orderItems);
       const { error: itemsError } = await supabase
         .from('order_items')
         .insert(orderItems);
 
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error('[DEBUG CHECKOUT] Items Insert Error:', itemsError);
+        throw itemsError;
+      }
+
+      console.log('[DEBUG CHECKOUT] Checkout complete!');
 
       // 3. Success!
       setIsOrdered(true);
       clearCart();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error: any) {
-      console.error('Checkout error:', error);
-      alert(`Checkout failed: ${error.message}. Ensure you have run the orders table SQL migration!`);
+      console.error('[DEBUG CHECKOUT] Final Error:', error);
+      alert(
+        `CHECKOUT FAILED!\n\n` +
+        `Error: ${error.message}\n` +
+        `Code: ${error.code || 'Unknown'}\n` +
+        `Details: ${error.details || 'None'}\n\n` +
+        `Please ensure you have run the SQL setup and your tables exist.`
+      );
     } finally {
       setIsCheckingOut(false);
     }

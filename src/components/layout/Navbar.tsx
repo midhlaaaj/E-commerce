@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, Heart, ShoppingBag, User as UserIcon, LogOut, LayoutDashboard, Menu, X } from 'lucide-react';
+import { Search, Heart, ShoppingBag, User as UserIcon, LogOut, LayoutDashboard, Menu, X, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
@@ -221,74 +221,116 @@ export const Navbar = ({ transparent = false }: NavbarProps) => {
       {isMobileMenuOpen && (
         <>
           <div 
-            className="fixed inset-0 bg-black/50 z-[60] lg:hidden animate-in fade-in duration-300"
+            className="fixed inset-0 bg-black/60 z-[60] lg:hidden backdrop-blur-sm animate-in fade-in duration-500"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          <div className="fixed inset-y-0 left-0 w-[280px] bg-white z-[70] lg:hidden animate-in slide-in-from-left duration-300 shadow-2xl flex flex-col">
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-              <span className="font-heading font-bold text-lg tracking-tight uppercase">Menu</span>
-              <button onClick={() => setIsMobileMenuOpen(false)}>
-                <X size={24} className="text-gray-400" />
+          <div className="fixed inset-y-0 left-0 w-full xs:w-[320px] bg-[#1A1614] z-[70] lg:hidden animate-in slide-in-from-left duration-500 shadow-2xl flex flex-col text-white">
+            {/* Header */}
+            <div className="p-8 flex items-center justify-between border-b border-white/5">
+              <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-white flex items-center justify-center rounded-sm">
+                  <span className="font-bold text-lg italic text-black">E</span>
+                </div>
+                <span className="font-heading font-black text-lg tracking-tight uppercase">ELITEWEAR</span>
+              </Link>
+              <button 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="p-2 hover:bg-white/5 rounded-full transition-colors"
+                aria-label="Close menu"
+              >
+                <X size={24} className="text-white/60" />
               </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto py-6">
-              <div className="px-6 space-y-6">
-                {['MEN', 'WOMEN', 'KIDS'].map((item) => (
+            <div className="flex-1 overflow-y-auto px-8 py-10 custom-scrollbar">
+              {/* Main Collections */}
+              <div className="space-y-1">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 mb-6">Collections</p>
+                {['MEN', 'WOMEN', 'KIDS'].map((item, index) => (
                   <Link
                     key={item}
                     href={`/${item.toLowerCase()}`}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="block text-sm font-bold tracking-[0.1em] text-gray-900"
+                    className="group block py-4 animate-in slide-in-from-left duration-500"
+                    style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    {item}
+                    <div className="flex items-center justify-between">
+                      <span className="text-3xl font-light tracking-tighter uppercase group-hover:pl-4 transition-all duration-300">
+                        {item}
+                      </span>
+                      <ChevronRight size={20} className="text-white/20 group-hover:text-white transition-colors" />
+                    </div>
                   </Link>
                 ))}
-                
-                <div className="h-px bg-gray-100 my-8" />
-                
-                <div className="space-y-6">
-                  <Link 
-                    href="/profile" 
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 text-sm font-medium text-gray-600"
-                  >
-                    <UserIcon size={18} />
-                    My Account
-                  </Link>
-                  {isAdmin && (
+              </div>
+
+              <div className="h-px bg-white/5 my-10" />
+
+              {/* Account & Support */}
+              <div className="space-y-8 animate-in fade-in duration-700 delay-300">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 mb-6">Service & Support</p>
+                  <div className="grid gap-6">
                     <Link 
-                      href="/admin" 
+                      href="/profile" 
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center gap-3 text-sm font-medium text-gray-600"
+                      className="flex items-center gap-4 text-sm font-medium text-white/70 hover:text-white transition-colors"
                     >
-                      <LayoutDashboard size={18} />
-                      Admin Dashboard
+                      <UserIcon size={18} strokeWidth={1.5} />
+                      My Account
                     </Link>
-                  )}
+                    <Link 
+                      href="/wishlist" 
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-4 text-sm font-medium text-white/70 hover:text-white transition-colors"
+                    >
+                      <Heart size={18} strokeWidth={1.5} />
+                      Wishlist
+                    </Link>
+                    {isAdmin && (
+                      <Link 
+                        href="/admin" 
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center gap-4 text-sm font-medium text-[#D97706] hover:text-[#FBBF24] transition-colors"
+                      >
+                        <LayoutDashboard size={18} strokeWidth={1.5} />
+                        Admin Portal
+                      </Link>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                   <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 mb-6">Connect</p>
+                   <div className="flex gap-6">
+                      {['Instagram', 'Twitter', 'Facebook'].map(social => (
+                        <a key={social} href="#" className="text-xs font-bold text-white/40 hover:text-white transition-colors uppercase tracking-widest">{social}</a>
+                      ))}
+                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-100">
+            {/* Footer Actions */}
+            <div className="p-8 pt-0 border-t border-white/5 bg-[#1A1614]">
               {user ? (
                 <button 
                   onClick={() => {
                     signOut();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="w-full py-4 text-sm font-bold text-red-500 uppercase tracking-widest border border-red-100 rounded-sm"
+                  className="w-full py-5 mt-8 bg-white/5 hover:bg-red-500/10 text-xs font-black text-red-400 uppercase tracking-[0.3em] transition-all rounded-sm border border-red-500/20"
                 >
-                  Log Out
+                  Terminate Session
                 </button>
               ) : (
-                <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-4 mt-8">
                   <button 
                     onClick={() => {
                       setIsMobileMenuOpen(false);
                       setIsLoginModalOpen(true);
                     }}
-                    className="w-full py-4 text-sm font-bold bg-black text-white uppercase tracking-widest rounded-sm"
+                    className="py-4 bg-white text-black text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95 shadow-xl shadow-white/5"
                   >
                     Login
                   </button>
@@ -297,12 +339,13 @@ export const Navbar = ({ transparent = false }: NavbarProps) => {
                       setIsMobileMenuOpen(false);
                       setIsSignupModalOpen(true);
                     }}
-                    className="w-full py-4 text-sm font-bold border border-black text-black uppercase tracking-widest rounded-sm"
+                    className="py-4 border border-white/20 hover:border-white text-white text-[10px] font-black uppercase tracking-[0.2em] transition-all"
                   >
-                    Join Now
+                    Join
                   </button>
                 </div>
               )}
+              <p className="mt-8 text-center text-[8px] font-medium text-white/20 uppercase tracking-[0.5em]">Elite Wear &copy; 2024</p>
             </div>
           </div>
         </>

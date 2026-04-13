@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { adminSupabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { 
   Plus, 
@@ -19,7 +21,6 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { uploadImage } from '@/lib/storage';
-import { useRealtime } from '@/hooks/useRealtime';
 
 interface Category {
   id: string;
@@ -61,35 +62,30 @@ export default function ProductsClient({
   forcedGender,
   forcedCategoryId 
 }: ProductsClientProps) {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const { supabase: authSupabase } = useAuth();
   const [selectedGender, setSelectedGender] = useState<'men' | 'women' | 'kids' | string | null>(forcedGender || null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(forcedCategoryId || null);
-  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
-  
-  // Category management states
-  const [isAddingCategory, setIsAddingCategory] = useState(false);
-  const [newCategory, setNewCategory] = useState({ name: '', gender: 'men' as 'men' | 'women' | 'kids' });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  
-  const router = useRouter();
 
-  // Real-Time Sync: Refetch when products or categories change
-  useRealtime('products', () => {
-    fetchProducts();
-  });
-  useRealtime('categories', () => {
-    fetchCategories();
+  // 1. Fetch Categories via React Query
+  const { data: categories = initialCategories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await authSupabase
+        .from('categories')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as Category[];
+    },
+    initialData: initialCategories
   });
 
-  async function fetchProducts() {
-    setLoading(true);
-    try {
-      let query = adminSupabase
+  // 2. Fetch Products via React Query
+  const { data: products = initialProducts, isLoading: loading } = useQuery({
+    queryKey: ['products', selectedGender, selectedCategoryId],
+    queryFn: async () => {
+      let query = authSupabase
         .from('products')
         .select('*')
         .order('created_at', { ascending: false });
@@ -103,29 +99,23 @@ export default function ProductsClient({
 
       const { data, error } = await query;
       if (error) throw error;
-      setProducts(data || []);
-      router.refresh();
-    } catch (err) {
-      console.error('Error fetching products:', err);
-    } finally {
-      setLoading(false);
-    }
-  }
+      return data as Product[];
+    },
+    initialData: initialProducts
+  });
+  
+  // Category management states
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [newCategory, setNewCategory] = useState({ name: '', gender: 'men' as 'men' | 'women' | 'kids' });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  
+  const router = useRouter();
 
-  async function fetchCategories() {
-    try {
-      const { data, error } = await adminSupabase
-        .from('categories')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      setCategories(data || []);
-      router.refresh();
-    } catch (err) {
-      console.error('Error fetching categories:', err);
-    }
-  }
+  // fetchProducts and fetchCategories are no longer needed as standalone functions 
+  // because React Query handles refetching automatically on invalidation.
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -158,7 +148,7 @@ export default function ProductsClient({
       setSelectedFile(null);
       setPreviewUrl(null);
       setIsAddingCategory(false);
-      fetchCategories();
+      // No manual fetch needed, global listener handles invalidation
     } catch (err: any) {
       alert(`Error adding category: ${err.message}`);
     } finally {
@@ -190,7 +180,7 @@ export default function ProductsClient({
       setEditingCategory(null);
       setSelectedFile(null);
       setPreviewUrl(null);
-      fetchCategories();
+      // No manual fetch needed, global listener handles invalidation
     } catch (err: any) {
       alert(`Error updating category: ${err.message}`);
     } finally {
@@ -207,19 +197,19 @@ export default function ProductsClient({
         .match({ id });
       
       if (error) throw error;
-      fetchCategories();
+      // No manual fetch needed, global listener handles invalidation
     } catch (err) {
       console.error('Error deleting category:', err);
     }
   }
 
   // Filter products based on search and hierarchy
-  const filteredProducts = products.filter(p => {
+  const filteredProducts = useMemo(() => products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
     const matchesGender = !selectedGender || p.gender === selectedGender;
     const matchesCategory = !selectedCategoryId || p.category_id === selectedCategoryId;
     return matchesSearch && matchesGender && matchesCategory;
-  });
+  }), [products, search, selectedGender, selectedCategoryId]);
 
   const getHeroImage = (gender: string) => {
     return initialHeros.find(h => h.section_key === `${gender}_hero`)?.image_url || '';
@@ -237,7 +227,7 @@ export default function ProductsClient({
         .match({ id });
       
       if (error) throw error;
-      fetchProducts();
+      // No manual fetch needed, global listener handles invalidation
     } catch (err) {
       console.error(`Error toggling ${field}:`, err);
     }
@@ -252,7 +242,7 @@ export default function ProductsClient({
         .match({ id });
       
       if (error) throw error;
-      fetchProducts();
+      // No manual fetch needed, global listener handles invalidation
     } catch (err) {
       console.error('Error deleting product:', err);
     }

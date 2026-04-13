@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { ProductCard } from '@/components/product/ProductCard';
 
@@ -9,7 +11,19 @@ interface FeaturedProductsProps {
 }
 
 export const FeaturedProducts = ({ initialData = [] }: FeaturedProductsProps) => {
-  const [products] = useState(initialData);
+  const { data: products = initialData } = useQuery({
+    queryKey: ['products', 'featured'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('is_featured', true)
+        .limit(5);
+      if (error) throw error;
+      return data;
+    },
+    initialData: initialData
+  });
 
   if (products.length === 0) return null;
 

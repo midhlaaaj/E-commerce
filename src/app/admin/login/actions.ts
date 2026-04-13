@@ -1,9 +1,9 @@
 'use server';
 
-import { createClient } from '@/lib/supabaseServer';
+import { createAdminClient } from '@/lib/supabaseServer';
 
 export async function adminLogin(formData: { email: string; password: string }) {
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email: formData.email,

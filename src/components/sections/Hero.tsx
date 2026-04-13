@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -11,7 +13,20 @@ interface HeroProps {
 }
 
 export const Hero = ({ initialData }: HeroProps) => {
-  const content = initialData;
+  const { data: content = initialData } = useQuery({
+    queryKey: ['homepage_content', 'main_hero'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('homepage_content')
+        .select('*')
+        .eq('section_key', 'main_hero')
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    initialData: initialData
+  });
+
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {

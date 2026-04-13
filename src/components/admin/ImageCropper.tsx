@@ -11,9 +11,10 @@ interface ImageCropperProps {
   originalFile: File;
   onCropComplete: (desktopFile: File, mobileFile: File, desktopPreview: string, mobilePreview: string) => void;
   onCancel: () => void;
+  singleStep?: boolean;
 }
 
-export function ImageCropper({ imageSrc, originalFile, onCropComplete, onCancel }: ImageCropperProps) {
+export function ImageCropper({ imageSrc, originalFile, onCropComplete, onCancel, singleStep }: ImageCropperProps) {
   const [step, setStep] = useState<'desktop' | 'mobile'>('desktop');
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop | null>(null);
@@ -76,7 +77,9 @@ export function ImageCropper({ imageSrc, originalFile, onCropComplete, onCancel 
       );
       const previewUrl = URL.createObjectURL(croppedFile);
 
-      if (step === 'desktop') {
+      if (singleStep) {
+        onCropComplete(croppedFile, croppedFile, previewUrl, previewUrl);
+      } else if (step === 'desktop') {
         setDesktopResult({ file: croppedFile, preview: previewUrl });
         setStep('mobile');
       } else {
@@ -86,7 +89,7 @@ export function ImageCropper({ imageSrc, originalFile, onCropComplete, onCancel 
       }
     } catch (err) {
       console.error('Error cropping image:', err);
-      alert('Failed to crop image. Please try again.');
+      alert(`Failed to crop image. ${err instanceof Error ? err.message : 'Please try again.'}`);
     } finally {
       setIsProcessing(false);
     }
@@ -102,16 +105,20 @@ export function ImageCropper({ imageSrc, originalFile, onCropComplete, onCancel 
             <div className={`p-2 rounded-lg ${step === 'desktop' ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>
               <Monitor size={18} />
             </div>
-            <div className="h-px w-4 bg-gray-200" />
-            <div className={`p-2 rounded-lg ${step === 'mobile' ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>
-              <Smartphone size={18} />
-            </div>
+            {!singleStep && (
+              <>
+                <div className="h-px w-4 bg-gray-200" />
+                <div className={`p-2 rounded-lg ${step === 'mobile' ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>
+                  <Smartphone size={18} />
+                </div>
+              </>
+            )}
             <div className="ml-2">
               <h3 className="font-heading font-black text-xl italic tracking-tighter uppercase">
-                {step === 'desktop' ? 'Step 1: Desktop View' : 'Step 2: Mobile View'}
+                {singleStep ? 'Crop Image' : step === 'desktop' ? 'Step 1: Desktop View' : 'Step 2: Mobile View'}
               </h3>
               <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mt-0.5">
-                {step === 'desktop' ? 'Crop for laptops and monitors (16:9)' : 'Crop for mobile devices (9:16)'}
+                {singleStep ? 'Crop image (Landscape 16:9)' : step === 'desktop' ? 'Crop for laptops and monitors (16:9)' : 'Crop for mobile devices (9:16)'}
               </p>
             </div>
           </div>
@@ -129,7 +136,7 @@ export function ImageCropper({ imageSrc, originalFile, onCropComplete, onCancel 
             crop={crop}
             onChange={(c) => setCrop(c)}
             onComplete={(c) => setCompletedCrop(c)}
-            aspect={step === 'desktop' ? 16 / 9 : 9 / 16}
+            aspect={singleStep ? 16 / 9 : step === 'desktop' ? 16 / 9 : 9 / 16}
             className="shadow-lg !max-w-full"
             style={{ maxHeight: 'calc(100vh - 300px)' }}
           >
@@ -140,7 +147,6 @@ export function ImageCropper({ imageSrc, originalFile, onCropComplete, onCancel 
               className="object-contain mx-auto block"
               style={{ maxHeight: 'calc(100vh - 300px)', width: 'auto' }}
               onLoad={onImageLoad}
-              crossOrigin="anonymous" 
             />
           </ReactCrop>
         </div>
@@ -148,7 +154,7 @@ export function ImageCropper({ imageSrc, originalFile, onCropComplete, onCancel 
         {/* Footer actions */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
           <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-            {step === 'desktop' ? 'Step 1 of 2' : 'Step 2 of 2'}
+            {singleStep ? 'Adjust image bounds' : step === 'desktop' ? 'Step 1 of 2' : 'Step 2 of 2'}
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -167,6 +173,11 @@ export function ImageCropper({ imageSrc, originalFile, onCropComplete, onCancel 
                 <>
                   <Loader2 size={16} className="animate-spin" />
                   Processing...
+                </>
+              ) : singleStep ? (
+                <>
+                  <Check size={16} />
+                  Finish & Save
                 </>
               ) : step === 'desktop' ? (
                 <>

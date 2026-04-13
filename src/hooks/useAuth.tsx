@@ -10,6 +10,7 @@ interface AuthContextType {
   loading: boolean;
   profileLoading: boolean;
   isAdmin: boolean;
+  supabase: SupabaseClient; // Added this
   signOut: () => Promise<void>;
 }
 
@@ -19,6 +20,7 @@ const UserContext = createContext<AuthContextType>({
   loading: true,
   profileLoading: true,
   isAdmin: false,
+  supabase: supabase,
   signOut: async () => {},
 });
 
@@ -28,6 +30,7 @@ const AdminContext = createContext<AuthContextType>({
   loading: true,
   profileLoading: true,
   isAdmin: false,
+  supabase: adminSupabase,
   signOut: async () => {},
 });
 
@@ -109,7 +112,7 @@ const createAuthProvider = (Context: React.Context<AuthContextType>, client: Sup
     const isAdmin = profile?.role === 'admin';
 
     return (
-      <Context.Provider value={{ user, profile, loading, profileLoading, isAdmin, signOut }}>
+      <Context.Provider value={{ user, profile, loading, profileLoading, isAdmin, signOut, supabase: client }}>
         {children}
       </Context.Provider>
     );

@@ -14,9 +14,9 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
 import { useCartStore } from '@/store/use-cart-store';
+import { useProfileStore } from '@/store/use-profile-store';
 
 interface Address {
   id: string;
@@ -33,9 +33,9 @@ interface Address {
 }
 
 export const ShippingAddress = () => {
-  const { user } = useAuth();
+  const { user, supabase } = useAuth();
   const { selectedAddressId, setSelectedAddressId } = useCartStore();
-  const [addresses, setAddresses] = useState<Address[]>([]);
+  const { addresses, setAddresses } = useProfileStore();
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(true);
   const [locationLoading, setLocationLoading] = useState(false);
@@ -68,10 +68,10 @@ export const ShippingAddress = () => {
 
       if (error) throw error;
       
-      const typedData = data as Address[] | null;
+      const typedData = data as any[] | null;
       setAddresses(typedData || []);
       if (typedData && typedData.length > 0 && !selectedAddressId) {
-        const defaultAddr = typedData.find((a: Address) => a.is_default) || typedData[0];
+        const defaultAddr = typedData.find((a: any) => a.is_default) || typedData[0];
         setSelectedAddressId(defaultAddr.id);
       }
     } catch (err) {
@@ -147,7 +147,7 @@ export const ShippingAddress = () => {
       const newAddress = data?.[0];
       if (!newAddress) throw new Error('No data returned from insert');
       
-      setAddresses(prev => [newAddress, ...prev]);
+      setAddresses([newAddress, ...addresses]);
       setSelectedAddressId(newAddress.id);
       setIsAdding(false);
       setFormData({

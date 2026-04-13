@@ -29,6 +29,7 @@ interface Order {
   created_at: string;
   status: string;
   total_amount: number;
+  tracking_number: string | null;
   order_items: OrderItem[];
 }
 

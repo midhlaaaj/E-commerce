@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -13,7 +15,25 @@ interface NewArrivalsProps {
 }
 
 export const NewArrivals = ({ initialData = [], gender }: NewArrivalsProps) => {
-  const [products] = useState(initialData);
+  const { data: products = initialData } = useQuery({
+    queryKey: ['products', 'new-arrivals', gender],
+    queryFn: async () => {
+      let query = supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (gender) {
+        query = query.eq('gender', gender);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+    initialData: initialData
+  });
 
   if (products.length === 0) return null;
 

@@ -4,13 +4,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { MapPin, Plus, Trash2, CheckCircle2, Home, Briefcase, MoreHorizontal } from 'lucide-react';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { AddressesSkeleton } from '@/components/profile/ProfileSkeleton';
 import { useProfileStore } from '@/store/use-profile-store';
 
 export default function AddressesPage() {
-  const { user, profileLoading } = useAuth();
+  const { user, profileLoading, supabase } = useAuth();
   const { addresses, hasLoadedAddresses, setAddresses } = useProfileStore();
   const [localLoading, setLocalLoading] = useState(!hasLoadedAddresses);
 

@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -24,7 +26,18 @@ interface CategoriesProps {
 const ORDER = ['gender_men', 'gender_women', 'gender_kids'];
 
 export const Categories = ({ initialData = [] }: CategoriesProps) => {
-  const [cards] = useState(initialData);
+  const { data: cards = initialData } = useQuery({
+    queryKey: ['homepage_content', 'gender_cards'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('homepage_content')
+        .select('*')
+        .in('section_key', ['gender_men', 'gender_women', 'gender_kids']);
+      if (error) throw error;
+      return data as HomepageContent[];
+    },
+    initialData: initialData
+  });
 
   if (cards.length === 0) return null;
 
