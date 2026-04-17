@@ -25,7 +25,10 @@ export const NewArrivals = ({ initialData = [], gender }: NewArrivalsProps) => {
         .limit(5);
       
       if (gender) {
-        query = query.eq('gender', gender);
+        const genderFilter = (gender === 'men' || gender === 'women') 
+          ? [gender, 'unisex'] 
+          : [gender];
+        query = query.in('gender', genderFilter);
       }
 
       const { data, error } = await query;

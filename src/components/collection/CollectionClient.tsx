@@ -112,6 +112,18 @@ export default function CollectionClient({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Prevent scroll when mobile filter is open
+  useEffect(() => {
+    if (isFilterOpen && window.innerWidth < 768) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isFilterOpen]);
+
   const sortOptions = [
     { value: 'newest', label: "What's New" },
     { value: 'price-low', label: 'Price Low' },
@@ -122,7 +134,7 @@ export default function CollectionClient({
   const currentSortLabel = sortOptions.find(opt => opt.value === sortBy)?.label || "Sort By";
 
   // Available Options calculation
-  const availableGenders = ['men', 'women', 'kids'];
+  const availableGenders = ['men', 'women', 'kids', 'unisex'];
   
   const availableCategories = useMemo(() => {
     const cats = new Set<string>();
@@ -156,7 +168,10 @@ export default function CollectionClient({
       const matchesColor = selectedColors.length === 0 || 
         (p.colors && p.colors.some(c => selectedColors.includes(c)));
       
-      const matchesGender = selectedGenders.length === 0 || selectedGenders.includes(p.gender);
+      const matchesGender = selectedGenders.length === 0 || selectedGenders.some(g => {
+        if (g === 'men' || g === 'women') return p.gender === g || p.gender === 'unisex';
+        return p.gender === g;
+      });
       
       const catName = p.category?.name || p.categories?.name;
       const matchesCategory = selectedCategories.length === 0 || 
@@ -288,13 +303,40 @@ export default function CollectionClient({
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 md:px-12 pb-16 flex gap-12">
-        {/* Sidebar Filters (Desktop) */}
+      <div className="max-w-7xl mx-auto px-6 md:px-12 pb-16 flex gap-12 relative">
+        {/* Sidebar Filters */}
         {!hideFilters && (
-          <aside className={cn(
-            "w-72 flex-shrink-0 space-y-12 transition-all duration-500",
-            isFilterOpen ? "block" : "hidden opacity-0 -translate-x-10"
-          )}>
+          <>
+            {/* Backdrop for mobile */}
+            <div 
+              className={cn(
+                "fixed inset-0 bg-black/40 backdrop-blur-sm z-[55] md:hidden transition-opacity duration-300",
+                isFilterOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+              )}
+              onClick={() => setIsFilterOpen(false)}
+            />
+            
+            <aside className={cn(
+              "fixed inset-y-0 left-0 z-[60] bg-white w-[85%] max-w-[320px] p-8 overflow-y-auto transition-all duration-500 ease-in-out md:relative md:inset-auto md:z-0 md:bg-transparent md:w-72 md:p-0 md:h-auto md:overflow-visible md:flex-shrink-0 md:translate-x-0 cursor-default shadow-2xl md:shadow-none",
+              isFilterOpen 
+                ? "translate-x-0 opacity-100" 
+                : "-translate-x-full md:-translate-x-10 md:opacity-0 md:hidden"
+            )}>
+              {/* Mobile Close Button & Header */}
+              <div className="flex items-center justify-between mb-10 md:hidden">
+                <div className="space-y-1">
+                  <h2 className="text-sm font-black uppercase tracking-[0.2em] text-[#1A1614]">Filters</h2>
+                  <p className="text-[9px] font-medium text-gray-400 uppercase tracking-widest">Refine your selection</p>
+                </div>
+                <button 
+                  onClick={() => setIsFilterOpen(false)}
+                  className="p-2 hover:bg-gray-50 rounded-full transition-colors border border-gray-100"
+                >
+                  <X size={20} className="text-[#1A1614]" />
+                </button>
+              </div>
+
+              <div className="space-y-12">
             {/* Gender Filter (Only show on 'all' items) */}
             {!gender && (
               <div className="space-y-6">
@@ -430,7 +472,9 @@ export default function CollectionClient({
                 )}
               </div>
             </div>
-          </aside>
+              </div>
+            </aside>
+          </>
         )}
 
         {/* Product Grid */}
@@ -438,7 +482,9 @@ export default function CollectionClient({
           {filteredProducts.length > 0 ? (
             <div className={cn(
               "grid gap-x-6 gap-y-12 transition-all duration-500",
-              isFilterOpen && !hideFilters ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4" : "grid-cols-2 lg:grid-cols-5"
+              isFilterOpen && !hideFilters 
+                ? "grid-cols-2 md:grid-cols-2 lg:grid-cols-4" 
+                : "grid-cols-2 lg:grid-cols-5"
             )}>
               {filteredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />

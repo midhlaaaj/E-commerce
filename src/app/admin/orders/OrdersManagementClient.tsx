@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { adminSupabase } from '@/lib/supabase';
-import { useAuth } from '@/hooks/useAuth';
+import { useAdminAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Search, 
@@ -64,7 +64,7 @@ interface Order {
 }
 
 export default function OrdersManagementClient() {
-  const { supabase: authSupabase, loading: authLoading } = useAuth();
+  const { supabase: authSupabase, loading: authLoading } = useAdminAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);

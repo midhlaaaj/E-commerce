@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase, adminSupabase } from '@/lib/supabase';
 import { User, SupabaseClient } from '@supabase/supabase-js';
+import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
   user: User | null;
@@ -10,7 +11,7 @@ interface AuthContextType {
   loading: boolean;
   profileLoading: boolean;
   isAdmin: boolean;
-  supabase: SupabaseClient; // Added this
+  supabase: SupabaseClient;
   signOut: () => Promise<void>;
 }
 
@@ -40,27 +41,34 @@ const createAuthProvider = (Context: React.Context<AuthContextType>, client: Sup
     const [profile, setProfile] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [profileLoading, setProfileLoading] = useState(true);
+    const router = useRouter();
 
     const fetchProfile = async (uid: string) => {
       setProfileLoading(true);
       try {
-        const { data } = await client
+        const { data, error } = await client
           .from('profiles')
           .select('*')
           .eq('id', uid)
           .single();
+        
+        if (error) throw error;
         if (data) setProfile(data);
       } catch (err) {
         console.error('Error fetching profile:', err);
+        setProfile(null);
       } finally {
         setProfileLoading(false);
       }
     };
 
     useEffect(() => {
+      let mounted = true;
+
       // 1. Initial Session Check (Fastest)
       client.auth.getSession()
         .then(({ data: { session } }) => {
+          if (!mounted) return;
           const currentUser = session?.user ?? null;
           setUser(currentUser);
           
@@ -74,6 +82,7 @@ const createAuthProvider = (Context: React.Context<AuthContextType>, client: Sup
           }
         })
         .catch((err) => {
+          if (!mounted) return;
           console.error('Session fetching error:', err);
           setLoading(false);
           setProfileLoading(false);
@@ -81,20 +90,34 @@ const createAuthProvider = (Context: React.Context<AuthContextType>, client: Sup
 
       // 2. Auth State Change listener
       const { data: { subscription } } = client.auth.onAuthStateChange(async (event, session) => {
+        if (!mounted) return;
+        
         const currentUser = session?.user ?? null;
+        
+        // Only trigger updates if the user ID or event changed meaningfully
         setUser(currentUser);
         setLoading(false);
 
         if (currentUser) {
-          await fetchProfile(currentUser.id);
+          // Fetch profile but don't AWAIT it here to prevent blocking state updates
+          fetchProfile(currentUser.id);
         } else {
           setProfile(null);
           setProfileLoading(false);
         }
+
+        // Centralized refresh for all session events
+        // This ensures Server Components stay in sync with Client Auth state
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+          router.refresh();
+        }
       });
 
-      return () => subscription.unsubscribe();
-    }, []);
+      return () => {
+        mounted = false;
+        subscription.unsubscribe();
+      };
+    }, [router]);
 
     const signOut = async () => {
       // Optimistic instant checkout
@@ -102,11 +125,16 @@ const createAuthProvider = (Context: React.Context<AuthContextType>, client: Sup
       setProfile(null);
       setProfileLoading(false);
       setLoading(false);
+      
+      // Dispatching this keeps legacy listeners happy if any exist
       window.dispatchEvent(new CustomEvent('auth:signout'));
 
-      client.auth.signOut().catch((err) => {
+      try {
+        await client.auth.signOut();
+        // router.refresh() will be triggered by onAuthStateChange listener
+      } catch (err) {
         console.error('Sign out error:', err);
-      });
+      }
     };
 
     const isAdmin = profile?.role === 'admin';
@@ -130,15 +158,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => (
   </UserProvider>
 );
 
-export const useAuth = () => {
-  const userAuth = useContext(UserContext);
-  const adminAuth = useContext(AdminContext);
-  
-  if (!userAuth.user && adminAuth.user) {
-    return adminAuth;
-  }
-  
-  return userAuth;
-};
+export const useAuth = () => useContext(UserContext);
 
 export const useAdminAuth = () => useContext(AdminContext);

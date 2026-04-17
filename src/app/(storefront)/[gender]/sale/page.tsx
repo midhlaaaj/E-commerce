@@ -8,10 +8,12 @@ export default async function GenderSalePage({ params }: { params: Promise<{ gen
   const { gender } = await params;
   const supabase = await createClient();
   
+  const genderFilter = (gender === 'men' || gender === 'women') ? [gender, 'unisex'] : [gender];
+
   const { data: products, error } = await supabase
     .from('products')
     .select('*')
-    .eq('gender', gender)
+    .in('gender', genderFilter)
     .not('offer_price', 'is', null);
 
   if (error) {

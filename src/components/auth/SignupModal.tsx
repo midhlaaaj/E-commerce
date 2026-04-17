@@ -42,7 +42,7 @@ export const SignupModal = ({ isOpen, onClose, onSwitchToLogin }: SignupModalPro
       setSuccess(true);
       setTimeout(() => {
         onClose();
-        router.refresh();
+        // router.refresh() is now handled globally by useAuth listener
       }, 2000);
     } catch (err: any) {
       setError(err.message);

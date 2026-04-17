@@ -33,14 +33,16 @@ export const LoginModal = ({ isOpen, onClose, onSwitchToSignup }: LoginModalProp
 
       if (error) throw error;
 
-      // Close modal and refresh the current page's server components
-      // This triggers the Navbar to re-render with the new user state
+      // Close modal. router.refresh() is now handled globally 
+      // by useAuth's onAuthStateChange listener for consistency.
       onClose();
-      router.refresh();
     } catch (err: any) {
       setError(err.message);
+      setLoading(false); // Ensure loading is reset on catch
     } finally {
-      setLoading(false);
+      // We don't necessarily want to setLoading(false) here if the modal is closing,
+      // but if the modal stays open (due to error), it's already handled in catch.
+      // If it succeeds, it unmounts.
     }
   };
 

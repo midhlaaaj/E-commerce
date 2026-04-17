@@ -7,6 +7,7 @@ import { Heart, ShoppingBag, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/store/use-cart-store';
 import { useWishlistStore } from '@/store/use-wishlist-store';
+import { useUIStore } from '@/store/use-ui-store';
 
 export interface Product {
   id: string;
@@ -19,6 +20,7 @@ export interface Product {
   gender?: string;
   category?: { name: string };
   categories?: { name: string };
+  sizes?: string[];
 }
 
 interface ProductCardProps {
@@ -31,19 +33,22 @@ export const ProductCard = ({ product, badge, variant = 'default' }: ProductCard
   const [mounted, setMounted] = useState(false);
   const { toggleItem, isInWishlist } = useWishlistStore();
   const isWishlisted = isInWishlist(product.id);
-  const [isSelectingSize, setIsSelectingSize] = useState(false);
+  
+  const { activeSizeSelectionId, setActiveSizeSelectionId } = useUIStore();
+  const isSelectingSize = activeSizeSelectionId === product.id;
+  
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const sizes = ['XS', 'S', 'M', 'L', 'XL'];
+  const productSizes = product.sizes && product.sizes.length > 0 ? product.sizes : ['ONESIZE'];
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsSelectingSize(true);
+    setActiveSizeSelectionId(product.id);
   };
 
   const toggleWishlist = (e: React.MouseEvent) => {
@@ -60,7 +65,7 @@ export const ProductCard = ({ product, badge, variant = 'default' }: ProductCard
     // Add to global cart state
     useCartStore.getState().addItem(product, size);
     
-    setIsSelectingSize(false);
+    setActiveSizeSelectionId(null);
   };
 
   return (
@@ -117,18 +122,25 @@ export const ProductCard = ({ product, badge, variant = 'default' }: ProductCard
         {isSelectingSize && (
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-300 z-20">
             <button 
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsSelectingSize(false); }}
+              onClick={(e) => { 
+                e.preventDefault(); 
+                e.stopPropagation(); 
+                setActiveSizeSelectionId(null); 
+              }}
               className="absolute top-4 right-4 text-white hover:text-gray-300"
             >
               <X size={20} />
             </button>
             <p className="text-[10px] font-black tracking-[0.2em] mb-6 uppercase">SELECT SIZE</p>
             <div className="flex flex-wrap justify-center gap-2">
-              {sizes.map((size) => (
+              {productSizes.map((size) => (
                 <button
                   key={size}
                   onClick={(e) => confirmSize(size, e)}
-                  className="w-10 h-10 border border-white/30 rounded-full flex items-center justify-center text-[10px] font-bold hover:bg-white hover:text-black hover:border-white transition-all"
+                  className={cn(
+                    "h-10 border border-white/30 rounded-full flex items-center justify-center text-[10px] font-bold hover:bg-white hover:text-black hover:border-white transition-all",
+                    size === 'ONESIZE' ? "px-6" : "w-10"
+                  )}
                 >
                   {size}
                 </button>

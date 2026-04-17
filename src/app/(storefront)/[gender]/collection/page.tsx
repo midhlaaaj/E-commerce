@@ -17,6 +17,10 @@ export default async function CollectionPage({ params }: Props) {
   const supabase = await createClient();
 
   // Fetch all products for the given gender
+  const genderFilter = (gender === 'men' || gender === 'women') 
+    ? [gender, 'unisex'] 
+    : [gender];
+
   const { data: products, error } = await supabase
     .from('products')
     .select(`
@@ -24,7 +28,7 @@ export default async function CollectionPage({ params }: Props) {
       category:categories(name),
       categories(name)
     `)
-    .eq('gender', gender)
+    .in('gender', genderFilter)
     .order('created_at', { ascending: false });
 
   if (error) {

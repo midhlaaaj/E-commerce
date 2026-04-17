@@ -10,6 +10,7 @@ export const ProductInfo = ({ product }: { product: any }) => {
   const [quantity, setQuantity] = useState(1);
   const addItem = useCartStore((state) => state.addItem);
   
+  const productSizes = product.sizes && product.sizes.length > 0 ? product.sizes : ['ONESIZE'];
   const categoryName = product?.category?.name || product?.categories?.name || 'COLLECTION';
   
   // Split name for archival look (First word light, rest bold)
@@ -18,14 +19,17 @@ export const ProductInfo = ({ product }: { product: any }) => {
   const restOfName = nameParts.slice(1).join(' ');
 
   const handleAddToCart = () => {
-    if (!selectedSize && product.sizes?.length > 0) {
+    // If there's only one size (likely ONESIZE), select it automatically
+    const sizeToUse = selectedSize || (productSizes.length === 1 ? productSizes[0] : null);
+
+    if (!sizeToUse && productSizes.length > 0) {
       alert('Please select a size');
       return;
     }
     
-    // Add to cart (existing store logic adds 1 at a time)
+    // Add to cart
     for (let i = 0; i < quantity; i++) {
-        addItem(product, selectedSize || 'One Size');
+        addItem(product, sizeToUse || 'ONESIZE');
     }
   };
 
@@ -81,24 +85,20 @@ export const ProductInfo = ({ product }: { product: any }) => {
         </div>
         
         <div className="flex gap-2.5 flex-wrap">
-          {product.sizes?.length > 0 ? product.sizes.map((size: string) => (
+          {productSizes.map((size: string) => (
             <button 
               key={size}
               onClick={() => setSelectedSize(size)}
               className={cn(
-                "w-14 h-14 text-[11px] font-black uppercase tracking-widest transition-all duration-300",
-                selectedSize === size 
+                "min-w-14 h-14 px-5 text-[11px] font-black uppercase tracking-widest transition-all duration-300 rounded-full",
+                (selectedSize === size || (productSizes.length === 1 && size === 'ONESIZE'))
                   ? "bg-[#1A1614] text-white" 
                   : "bg-white border border-gray-100 text-[#1A1614] hover:border-black"
               )}
             >
               {size}
             </button>
-          )) : (
-            <button className="px-6 h-14 bg-[#1A1614] text-white text-[11px] font-black uppercase tracking-widest">
-              ONE SIZE
-            </button>
-          )}
+          ))}
         </div>
       </div>
 

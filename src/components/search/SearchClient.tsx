@@ -136,13 +136,25 @@ export default function SearchClient() {
       const searchTerm = matchedGender ? lowerQuery.replace(matchedGender, '').trim() : lowerQuery;
 
       if (filters) {
-        if (filters.gender) baseQuery = baseQuery.eq('gender', filters.gender);
+        if (filters.gender) {
+          if (filters.gender === 'kids') {
+            baseQuery = baseQuery.eq('gender', 'kids');
+          } else {
+            baseQuery = baseQuery.in('gender', [filters.gender, 'unisex']);
+          }
+        }
         if (filters.categoryId) {
           baseQuery = baseQuery.eq('category_id', filters.categoryId);
         }
       } else if (matchedGender || searchTerm) {
         // Intelligently parse manual search queries like "men shirt"
-        if (matchedGender) baseQuery = baseQuery.eq('gender', matchedGender);
+        if (matchedGender) {
+          if (matchedGender === 'kids') {
+            baseQuery = baseQuery.eq('gender', 'kids');
+          } else {
+            baseQuery = baseQuery.in('gender', [matchedGender, 'unisex']);
+          }
+        }
         
         if (searchTerm) {
           // Check if the searchTerm matches a category name first for better results

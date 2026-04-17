@@ -33,7 +33,7 @@ export default async function GenderCategoryPage({ params }: Props) {
     .from('categories')
     .select('id, name')
     .ilike('name', categoryName)
-    .eq('gender', gender)
+    .in('gender', [gender, 'unisex'])
     .single();
 
   if (!categoryData) {
@@ -41,7 +41,7 @@ export default async function GenderCategoryPage({ params }: Props) {
     const { data: categoryList } = await supabase
       .from('categories')
       .select('id, name')
-      .eq('gender', gender);
+      .in('gender', [gender, 'unisex']);
       
     // Find matching category by slugging its name locally
     const matched = categoryList?.find(c => 
@@ -56,7 +56,7 @@ export default async function GenderCategoryPage({ params }: Props) {
   const { data: products, error } = await supabase
     .from('products')
     .select('*')
-    .eq('gender', gender)
+    .in('gender', [gender, 'unisex'])
     .eq('category_id', categoryData.id)
     .order('created_at', { ascending: false });
 

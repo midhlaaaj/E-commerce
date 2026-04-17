@@ -41,15 +41,10 @@ export const Navbar = ({ transparent = false }: NavbarProps) => {
     };
     window.addEventListener('scroll', handleScroll);
 
-    // Listen for sign-out events to refresh server components
-    const handleSignout = () => router.refresh();
-    window.addEventListener('auth:signout', handleSignout);
-
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('auth:signout', handleSignout);
     };
-  }, [router]);
+  }, []);
 
   const isHeroPage = ['/', '/men', '/women', '/kids'].includes(pathname);
   const showSolid = !transparent || isScrolled || !isHeroPage;

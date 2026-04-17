@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { adminSupabase } from '@/lib/supabase';
-import { useAuth } from '@/hooks/useAuth';
+import { useAdminAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { 
@@ -17,8 +17,10 @@ import {
   ChevronRight,
   Package,
   Image as ImageIcon,
-  X
+  X,
+  Target
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { uploadImage } from '@/lib/storage';
 
@@ -62,8 +64,8 @@ export default function ProductsClient({
   forcedGender,
   forcedCategoryId 
 }: ProductsClientProps) {
-  const { supabase: authSupabase } = useAuth();
-  const [selectedGender, setSelectedGender] = useState<'men' | 'women' | 'kids' | string | null>(forcedGender || null);
+  const { supabase: authSupabase } = useAdminAuth();
+  const [selectedGender, setSelectedGender] = useState<'men' | 'women' | 'kids' | 'unisex' | string | null>(forcedGender || null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(forcedCategoryId || null);
   const [search, setSearch] = useState('');
 
@@ -106,7 +108,10 @@ export default function ProductsClient({
   
   // Category management states
   const [isAddingCategory, setIsAddingCategory] = useState(false);
-  const [newCategory, setNewCategory] = useState({ name: '', gender: 'men' as 'men' | 'women' | 'kids' });
+  const [newCategory, setNewCategory] = useState({ 
+    name: '', 
+    gender: (forcedGender || selectedGender || 'men') as 'men' | 'women' | 'kids' | 'unisex' 
+  });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -130,7 +135,7 @@ export default function ProductsClient({
     if (!newCategory.name || !selectedFile) return;
     setSaving(true);
 
-    const targetGender = selectedGender || newCategory.gender;
+    const targetGender = newCategory.gender || selectedGender || 'men';
     
     try {
       const imageUrl = await uploadImage(selectedFile!, 'categories');
@@ -144,7 +149,7 @@ export default function ProductsClient({
       
       if (error) throw error;
       
-      setNewCategory({ name: '', gender: 'men' });
+      setNewCategory({ name: '', gender: (selectedGender as any) || 'men' });
       setSelectedFile(null);
       setPreviewUrl(null);
       setIsAddingCategory(false);
@@ -206,7 +211,8 @@ export default function ProductsClient({
   // Filter products based on search and hierarchy
   const filteredProducts = useMemo(() => products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchesGender = !selectedGender || p.gender === selectedGender;
+    const isMenOrWomen = selectedGender === 'men' || selectedGender === 'women';
+    const matchesGender = !selectedGender || (isMenOrWomen ? (p.gender === selectedGender || p.gender === 'unisex') : p.gender === selectedGender);
     const matchesCategory = !selectedCategoryId || p.category_id === selectedCategoryId;
     return matchesSearch && matchesGender && matchesCategory;
   }), [products, search, selectedGender, selectedCategoryId]);
@@ -330,9 +336,11 @@ export default function ProductsClient({
 
       {!selectedGender ? (
         /* STAGE 1: GENDER SELECTION */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {(['men', 'women', 'kids'] as const).map((gender) => {
-            const count = products.filter(p => p.gender === gender).length;
+            const count = products.filter(p => 
+              gender === 'kids' ? p.gender === 'kids' : (p.gender === gender || p.gender === 'unisex')
+            ).length;
             return (
               <div key={gender} className="group block">
                 <button 
@@ -340,7 +348,7 @@ export default function ProductsClient({
                   className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl cursor-pointer bg-white shadow-xl shadow-black/5 hover:shadow-black/15 transition-all duration-700 active:scale-95 mb-4"
                 >
                   <img 
-                    src={getHeroImage(gender)} 
+                    src={getHeroImage(gender) || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?q=80&w=2070&auto=format&fit=crop'} 
                     alt={gender} 
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                   />
@@ -377,7 +385,25 @@ export default function ProductsClient({
                     onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
                   />
                 </div>
-                <div className="space-y-2 col-span-1 lg:col-span-2">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Visibility</label>
+                  <button
+                    type="button"
+                    onClick={() => setNewCategory({
+                      ...newCategory, 
+                      gender: newCategory.gender === 'unisex' ? (selectedGender as any || 'men') : 'unisex'
+                    })}
+                    className={cn(
+                      "w-full py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border",
+                      newCategory.gender === 'unisex' 
+                        ? "bg-black text-white border-black shadow-lg" 
+                        : "bg-gray-50 text-gray-400 border-gray-100 hover:text-black hover:border-black"
+                    )}
+                  >
+                    {newCategory.gender === 'unisex' ? '✓ Unisex (Visible Everywhere)' : 'Make Unisex'}
+                  </button>
+                </div>
+                <div className="space-y-2 col-span-1 lg:col-span-1">
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Category Image</label>
                   <div className="relative group/upload h-32 md:h-14">
                     <input 
@@ -393,7 +419,7 @@ export default function ProductsClient({
                     }`}>
                       <Plus size={18} className={`${previewUrl ? 'text-[#D97706]' : 'text-gray-400'} mr-3`} />
                       <span className={`text-xs font-bold truncate ${previewUrl ? 'text-[#D97706]' : 'text-gray-400'}`}>
-                        {selectedFile ? selectedFile.name : 'Select Image from Device'}
+                        {selectedFile ? selectedFile.name : 'Select Image'}
                       </span>
                     </div>
                   </div>
@@ -436,41 +462,41 @@ export default function ProductsClient({
                     onChange={(e) => setEditingCategory({...editingCategory, name: e.target.value})}
                   />
                 </div>
-                <div className="space-y-2 col-span-1 lg:col-span-2">
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Update Image (Optional)</label>
-                  <div className="relative group/upload h-32 md:h-14">
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                    />
-                    <div className={`w-full h-full border-2 border-dashed rounded-xl flex items-center px-4 transition-all ${
-                      previewUrl 
-                        ? 'border-[#D97706] bg-[#D97706]/5' 
-                        : 'border-gray-200 bg-gray-50 group-hover/upload:border-[#D97706]'
-                    }`}>
-                      <Plus size={18} className={`${previewUrl ? 'text-[#D97706]' : 'text-gray-400'} mr-3`} />
-                      <span className={`text-xs font-bold truncate ${previewUrl ? 'text-[#D97706]' : 'text-gray-400'}`}>
-                        {selectedFile ? selectedFile.name : 'Change Category Image'}
-                      </span>
-                    </div>
-                  </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Visibility</label>
+                  <button
+                    type="button"
+                    onClick={() => setEditingCategory({
+                      ...editingCategory, 
+                      gender: editingCategory.gender === 'unisex' ? (selectedGender as any || 'men') : 'unisex'
+                    })}
+                    className={cn(
+                      "w-full py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all border",
+                      editingCategory.gender === 'unisex' 
+                        ? "bg-black text-white border-black shadow-lg" 
+                        : "bg-gray-50 text-gray-400 border-gray-100 hover:text-black hover:border-black"
+                    )}
+                  >
+                    {editingCategory.gender === 'unisex' ? '✓ Unisex' : 'Make Unisex'}
+                  </button>
                 </div>
                 <button 
                   disabled={saving}
                   onClick={handleUpdateCategory}
-                  className="px-6 py-3 bg-black text-white rounded-xl text-sm font-bold hover:bg-[#D97706] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="px-6 py-3 bg-black text-white rounded-xl text-sm font-bold hover:bg-[#D97706] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 lg:col-span-1 shadow-lg shadow-black/10"
                 >
                   {saving ? <Loader2 className="animate-spin" size={18} /> : <Edit2 size={18} />}
-                  Update Category
+                  Update
                 </button>
               </div>
             </div>
           )}
 
            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-              {categories.filter(c => c.gender === selectedGender).map((cat) => {
+              {categories.filter(c => {
+                const isMenOrWomen = selectedGender === 'men' || selectedGender === 'women';
+                return isMenOrWomen ? (c.gender === selectedGender || c.gender === 'unisex') : (c.gender === selectedGender);
+              }).map((cat) => {
                 const productCount = products.filter(p => p.category_id === cat.id).length;
                 return (
                   <div 

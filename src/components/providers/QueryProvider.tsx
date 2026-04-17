@@ -7,8 +7,8 @@ export default function QueryProvider({ children }: { children: React.ReactNode 
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        refetchOnWindowFocus: true, // Auto-update when switching back to tab
-        staleTime: 1000 * 30, // Data remains fresh for 30 seconds
+        refetchOnWindowFocus: false, // Prevent aggressive reloading on tab focus
+        staleTime: 1000 * 60, // Data remains fresh for 60 seconds
         retry: 1,
       },
     },

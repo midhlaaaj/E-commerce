@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { 
   Plus, Trash2, Loader2, Image as ImageIcon, ChevronLeft, X, Upload, Check, Search
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Category {
   id: string;
@@ -30,6 +31,13 @@ export default function EditProductClient({ initialCategories, initialProduct }:
   const [loading, setLoading] = useState(false);
   const [categories] = useState<Category[]>(initialCategories);
   const [selectedGender, setSelectedGender] = useState(initialProduct.gender || 'men');
+  const [activePreset, setActivePreset] = useState<string | null>(null);
+  
+  const SIZE_PRESETS = {
+    JEANS: ['26', '28', '30', '32', '34', '36'],
+    SHIRTS: ['XS', 'S', 'M', 'L', 'XL'],
+    SINGLE: ['ONESIZE']
+  };
   const [submitError, setSubmitError] = useState<string | null>(null);
   
   const [product, setProduct] = useState({
@@ -104,7 +112,7 @@ export default function EditProductClient({ initialCategories, initialProduct }:
           stock: parseInt(product.stock) || 0,
           is_featured: product.is_featured,
           is_sale: product.is_sale,
-          sizes,
+          sizes: sizes.length > 0 ? sizes : ['ONESIZE'],
           images: finalImageUrls,
           colors: product.colors
         })
@@ -161,11 +169,18 @@ export default function EditProductClient({ initialCategories, initialProduct }:
     if (newSize && !sizes.includes(newSize)) {
       setSizes([...sizes, newSize]);
       setNewSize('');
+      setActivePreset(null);
     }
+  };
+
+  const applyPreset = (key: string, preset: string[]) => {
+    setSizes(preset);
+    setActivePreset(key);
   };
 
   const removeSize = (s: string) => {
     setSizes(sizes.filter(sz => sz !== s));
+    setActivePreset(null);
   };
 
   return (
@@ -319,8 +334,54 @@ export default function EditProductClient({ initialCategories, initialProduct }:
             <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm space-y-6">
               <h3 className="font-bold text-lg border-b border-gray-50 pb-4 tracking-tight">Configuration</h3>
               
-              <div className="space-y-4">
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Available Sizes</label>
+              <div className="space-y-4 pt-4 border-b border-gray-50 pb-6">
+                <div className="flex flex-col gap-3">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Size Presets</label>
+                  <div className="flex gap-3">
+                    <button 
+                      type="button" 
+                      onClick={() => applyPreset('JEANS', SIZE_PRESETS.JEANS)}
+                      className={cn(
+                        "flex-1 py-3 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
+                        activePreset === 'JEANS' 
+                          ? "bg-black text-white border-black shadow-lg" 
+                          : "bg-gray-50 text-black border-gray-100 hover:bg-black hover:text-white"
+                      )}
+                    >
+                      Jeans
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => applyPreset('SHIRTS', SIZE_PRESETS.SHIRTS)}
+                      className={cn(
+                        "flex-1 py-3 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
+                        activePreset === 'SHIRTS' 
+                          ? "bg-black text-white border-black shadow-lg" 
+                          : "bg-gray-50 text-black border-gray-100 hover:bg-black hover:text-white"
+                      )}
+                    >
+                      Shirts
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => applyPreset('SINGLE', SIZE_PRESETS.SINGLE)}
+                      className={cn(
+                        "flex-1 py-3 border rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95",
+                        activePreset === 'SINGLE' 
+                          ? "bg-black text-white border-black shadow-lg" 
+                          : "bg-gray-50 text-black border-gray-100 hover:bg-black hover:text-white"
+                      )}
+                    >
+                      ONESIZE
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 pt-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Available Sizes</label>
+                </div>
                 <div className="flex flex-wrap gap-2">
                   {sizes.map(s => (
                     <span key={s} className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs font-bold uppercase tracking-widest">
@@ -336,6 +397,7 @@ export default function EditProductClient({ initialCategories, initialProduct }:
                     className="flex-1 px-4 py-2 bg-gray-50 border-none rounded-xl text-xs focus:ring-1 focus:ring-[#D97706] transition-all"
                     value={newSize}
                     onChange={(e) => setNewSize(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSize())}
                   />
                   <button type="button" onClick={addSize} className="px-4 py-2 bg-black text-white rounded-xl text-xs font-bold transition-colors">ADD</button>
                 </div>

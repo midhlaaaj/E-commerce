@@ -77,28 +77,31 @@ export default function AdminSidebar({ user, profile }: SidebarProps) {
           
           return (
             <div key={item.label} className="space-y-1">
-              <div className="flex">
+              <div 
+                className={cn(
+                  "flex items-center rounded-lg transition-colors duration-200",
+                  isActive 
+                    ? "bg-gray-100 text-gray-900" 
+                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                )}
+              >
                 <Link
                   href={item.href}
-                  className={cn(
-                    "flex-1 flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200",
-                    isActive 
-                      ? "bg-gray-100 text-gray-900" 
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  )}
+                  onClick={() => {
+                    if (item.hasDropdown) {
+                      toggleSection(item.label);
+                    }
+                  }}
+                  className="flex-1 flex items-center justify-between px-3 py-2 text-sm font-medium"
                 >
-                  <item.icon size={18} className={isActive ? "text-gray-900" : "text-gray-400"} />
-                  {item.label}
+                  <div className="flex items-center gap-3">
+                    <item.icon size={18} className={isActive ? "text-gray-900" : "text-gray-400"} />
+                    {item.label}
+                  </div>
+                  {item.hasDropdown && (
+                    <ChevronDown size={16} className={cn("text-gray-400 ml-auto transition-transform duration-200", isExpanded && "rotate-180")} />
+                  )}
                 </Link>
-                
-                {item.hasDropdown && (
-                  <button 
-                    onClick={() => toggleSection(item.label)}
-                    className="p-2 ml-1 text-gray-400 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
-                  >
-                    <ChevronDown size={16} className={cn("transition-transform duration-200", isExpanded && "rotate-180")} />
-                  </button>
-                )}
               </div>
               
               {item.hasDropdown && isExpanded && (
