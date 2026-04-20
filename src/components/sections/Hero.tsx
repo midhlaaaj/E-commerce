@@ -51,7 +51,7 @@ export const Hero = ({ initialData }: HeroProps) => {
   }
 
   return (
-    <section className="relative h-screen md:h-screen w-full flex items-end overflow-hidden">
+    <section className="relative h-[100dvh] w-full flex items-end overflow-hidden">
       {/* Background Image Container */}
       <div className="absolute inset-0">
         {/* Desktop Image */}
