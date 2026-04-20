@@ -167,10 +167,11 @@ export default function SearchClient() {
             catQuery = catQuery.eq('gender', matchedGender);
           }
 
-          const { data: categoryData } = await catQuery.limit(1).maybeSingle();
+          const { data: categories } = await catQuery;
 
-          if (categoryData) {
-            baseQuery = baseQuery.eq('category_id', categoryData.id);
+          if (categories && categories.length > 0) {
+            const catIds = categories.map((c: any) => c.id).join(',');
+            baseQuery = baseQuery.or(`category_id.in.(${catIds}),name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
           } else {
             // General text search fallback
             baseQuery = baseQuery.or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
@@ -207,14 +208,14 @@ export default function SearchClient() {
             ref={inputRef}
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => { setQuery(e.target.value); setIsSearching(false); }}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch(query)}
             placeholder="Search for products"
             className="w-full bg-transparent border-none focus:ring-0 text-base font-medium placeholder:text-gray-400 outline-none"
           />
           {query && (
             <button 
-              onClick={() => { setQuery(''); setSuggestions([]); }}
+              onClick={() => { setQuery(''); setSuggestions([]); setIsSearching(false); }}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-1"
             >
               <X size={18} className="text-gray-400" />

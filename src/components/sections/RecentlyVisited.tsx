@@ -6,6 +6,7 @@ import { Trash2 } from 'lucide-react';
 import { SectionHeader } from '@/components/layout/SectionHeader';
 import { supabase } from '@/lib/supabase';
 import { ProductCard, type Product } from '@/components/product/ProductCard';
+import { cn } from '@/lib/utils';
 
 export const RecentlyVisited = ({ hideWhenEmpty = false }: { hideWhenEmpty?: boolean }) => {
   const [hasMounted, setHasMounted] = useState(false);
@@ -91,7 +92,7 @@ export const RecentlyVisited = ({ hideWhenEmpty = false }: { hideWhenEmpty?: boo
       />
 
       {loading ? (
-        <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+        <div className="flex gap-6 overflow-x-auto pb-4">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="w-[calc(50%-12px)] lg:w-[calc(20%-19.2px)] flex-shrink-0 aspect-[3/4] bg-black/[0.02] animate-pulse rounded-sm" />
           ))}
@@ -114,7 +115,10 @@ export const RecentlyVisited = ({ hideWhenEmpty = false }: { hideWhenEmpty?: boo
           </a>
         </div>
       ) : (
-        <div className="flex gap-6 overflow-x-auto pb-8 scrollbar-hide animate-in fade-in duration-700">
+        <div className={cn(
+          "flex gap-6 overflow-x-auto pb-8 animate-in fade-in duration-700",
+          products.length > 3 && "max-md:[&::-webkit-scrollbar]:h-1 max-md:[&::-webkit-scrollbar]:block max-md:[&::-webkit-scrollbar-track]:bg-transparent max-md:[&::-webkit-scrollbar-thumb]:bg-gray-300 max-md:[&::-webkit-scrollbar-thumb]:rounded-full"
+        )}>
           {products.map((product) => (
             <div key={product.id} className="w-[calc(50%-12px)] lg:w-[calc(20%-19.2px)] flex-shrink-0">
               <ProductCard product={product} />
