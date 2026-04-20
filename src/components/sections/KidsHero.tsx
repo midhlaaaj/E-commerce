@@ -29,7 +29,7 @@ export const KidsHero = ({ initialData }: KidsHeroProps) => {
   }
 
   return (
-    <section className="relative h-screen md:h-screen w-full flex items-end overflow-hidden">
+    <section className="relative h-[100dvh] w-full flex items-end overflow-hidden">
       {/* Background Image Container */}
       <div className="absolute inset-0">
         {/* Desktop Image */}
@@ -79,9 +79,9 @@ export const KidsHero = ({ initialData }: KidsHeroProps) => {
             )}
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4 pt-6">
+          <div className="flex flex-row md:flex-row items-center gap-3 md:gap-4 pt-4 md:pt-6">
             <Link href={content?.cta_link === '/kids' ? '/kids/collection' : (content?.cta_link || '/kids/collection')}>
-              <button className="bg-white text-black px-12 py-5 text-[10px] font-bold uppercase tracking-[0.2em] min-w-[180px] hover:bg-gray-200 transition-all active:scale-95 rounded-none">
+              <button className="bg-white text-black px-6 py-3.5 md:px-12 md:py-5 text-[9px] md:text-[10px] font-black md:font-bold uppercase tracking-[0.2em] min-w-[140px] md:min-w-[180px] hover:bg-gray-200 transition-all active:scale-95 rounded-none">
                 {content?.cta_text || 'SHOP NOW'}
               </button>
             </Link>
