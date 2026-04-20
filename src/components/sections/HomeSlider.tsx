@@ -12,7 +12,7 @@ interface HomeSliderProps {
 }
 
 export function HomeSlider({ images: initialImages }: HomeSliderProps) {
-  const { data: images = initialImages } = useQuery({
+  const { data: queryImages } = useQuery({
     queryKey: ['slider_images'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -23,8 +23,11 @@ export function HomeSlider({ images: initialImages }: HomeSliderProps) {
       if (error) throw error;
       return data as SliderImage[];
     },
-    initialData: initialImages
+    // We remove initialData to ensure the client always performs its own validation
+    // while queryImages || initialImages handles the immediate UI display.
   });
+
+  const images = queryImages || initialImages || [];
 
   const itemsPerViewDesktop = 3;
   const itemsPerViewMobile = 1;
@@ -39,6 +42,23 @@ export function HomeSlider({ images: initialImages }: HomeSliderProps) {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const isCooldown = useRef(false);
+  const [isReady, setIsReady] = useState(false);
+  // Sync index when images load or change
+  useEffect(() => {
+    if (images.length > 0 && !isReady) {
+      setCurrentIndex(images.length);
+      setIsReady(true);
+    }
+  }, [images.length, isReady]);
+
+  // Restart auto-play synchronization when images update from query
+  useEffect(() => {
+    if (queryImages && queryImages.length > 0) {
+      setIsTransitioning(false); // Reset transition for snap
+      setCurrentIndex(queryImages.length);
+      setIsReady(true);
+    }
+  }, [queryImages]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -123,7 +143,8 @@ export function HomeSlider({ images: initialImages }: HomeSliderProps) {
     }
   };
 
-  if (!images || images.length === 0) return null;
+  // Remove the early return to ensure ResizeObserver and other hooks run
+  // if (!images || images.length === 0) return null;
 
   const activeDotIndex = currentIndex % images.length;
 
@@ -152,7 +173,7 @@ export function HomeSlider({ images: initialImages }: HomeSliderProps) {
             className="flex-shrink-0"
             style={{ width: `${100 / itemsPerView}%` }}
           >
-            <div className="relative aspect-[16/9] overflow-hidden w-full h-full select-none pointer-events-none">
+            <div className="relative aspect-[16/9] overflow-hidden w-full select-none pointer-events-none">
               {img.link ? (
                 <Link href={img.link} className="block w-full h-full pointer-events-auto">
                   <picture>
@@ -179,6 +200,13 @@ export function HomeSlider({ images: initialImages }: HomeSliderProps) {
             </div>
           </div>
         ))}
+        
+        {/* Placeholder if no images yet to maintain layout height */}
+        {images.length === 0 && (
+          <div className="w-full aspect-[16/9] bg-gray-200 animate-pulse flex items-center justify-center">
+            <span className="text-gray-400 text-xs font-bold uppercase tracking-widest">Loading Banners...</span>
+          </div>
+        )}
       </div>
 
       {images.length > 1 && (

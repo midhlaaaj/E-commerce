@@ -60,7 +60,7 @@ export default function SearchClient() {
           catQuery = catQuery.ilike('name', `%${searchTerm}%`);
         }
 
-        const { data: categories } = await catQuery;
+        const { data: categories } = await catQuery.limit(10);
 
         // 2. Fetch matching products (just a few)
         const { data: products } = await supabase
@@ -158,12 +158,16 @@ export default function SearchClient() {
         
         if (searchTerm) {
           // Check if the searchTerm matches a category name first for better results
-          const { data: categoryData } = await supabase
+          let catQuery = supabase
             .from('categories')
             .select('id')
-            .ilike('name', `%${searchTerm}%`)
-            .limit(1)
-            .single();
+            .ilike('name', `%${searchTerm}%`);
+            
+          if (matchedGender) {
+            catQuery = catQuery.eq('gender', matchedGender);
+          }
+
+          const { data: categoryData } = await catQuery.limit(1).maybeSingle();
 
           if (categoryData) {
             baseQuery = baseQuery.eq('category_id', categoryData.id);
@@ -268,10 +272,13 @@ export default function SearchClient() {
             {suggestions.map((s, i) => (
               <button 
                 key={i}
-                onClick={() => handleSearch(s.label, s.type === 'category' 
-                  ? { gender: s.gender, categoryId: s.categoryId } 
-                  : { type: 'product', id: s.id }
-                )}
+                onClick={() => {
+                  setQuery(s.label);
+                  handleSearch(s.label, s.type === 'category' 
+                    ? { gender: s.gender, categoryId: s.categoryId } 
+                    : { type: 'product', id: s.id }
+                  );
+                }}
                 className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors group"
               >
                 <div className="flex items-center gap-4">

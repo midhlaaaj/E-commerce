@@ -34,6 +34,10 @@ export default async function Home() {
   const quoteData = quoteResponse.data || {};
   const saleData = saleResponse.data || [];
   const sliderData = sliderResponse.data || [];
+  
+  if (sliderResponse.error) {
+    console.error('[Server Error] Failed to fetch slider_images:', sliderResponse.error);
+  }
 
   return (
     <main className="min-h-screen bg-white">
