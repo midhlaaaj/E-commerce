@@ -12,7 +12,7 @@ interface HomeSliderProps {
 }
 
 export function HomeSlider({ images: initialImages }: HomeSliderProps) {
-  const { data: queryImages } = useQuery({
+  const { data: images = [] } = useQuery({
     queryKey: ['slider_images'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -23,11 +23,8 @@ export function HomeSlider({ images: initialImages }: HomeSliderProps) {
       if (error) throw error;
       return data as SliderImage[];
     },
-    // We remove initialData to ensure the client always performs its own validation
-    // while queryImages || initialImages handles the immediate UI display.
+    initialData: initialImages // Safely inject server-provided data
   });
-
-  const images = queryImages || initialImages || [];
 
   const itemsPerViewDesktop = 3;
   const itemsPerViewMobile = 1;
@@ -43,22 +40,14 @@ export function HomeSlider({ images: initialImages }: HomeSliderProps) {
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const isCooldown = useRef(false);
   const [isReady, setIsReady] = useState(false);
-  // Sync index when images load or change
+  
+  // Sync index specifically when the images array becomes populated for the first time
   useEffect(() => {
     if (images.length > 0 && !isReady) {
       setCurrentIndex(images.length);
       setIsReady(true);
     }
   }, [images.length, isReady]);
-
-  // Restart auto-play synchronization when images update from query
-  useEffect(() => {
-    if (queryImages && queryImages.length > 0) {
-      setIsTransitioning(false); // Reset transition for snap
-      setCurrentIndex(queryImages.length);
-      setIsReady(true);
-    }
-  }, [queryImages]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -173,26 +162,26 @@ export function HomeSlider({ images: initialImages }: HomeSliderProps) {
             className="flex-shrink-0"
             style={{ width: `${100 / itemsPerView}%` }}
           >
-            <div className="relative aspect-[16/9] overflow-hidden w-full select-none pointer-events-none">
+            <div className="relative aspect-[16/9] overflow-hidden w-full select-none pointer-events-none group/img">
               {img.link ? (
-                <Link href={img.link} className="block w-full h-full pointer-events-auto">
-                  <picture>
+                <Link href={img.link} className="absolute inset-0 block w-full h-full pointer-events-auto">
+                  <picture className="absolute inset-0 block w-full h-full">
                     {img.mobile_image_url && <source media="(max-width: 768px)" srcSet={img.mobile_image_url} />}
                     <img 
                       src={img.image_url} 
                       alt="Banner" 
-                      className="w-full h-full object-cover transition-transform duration-700 hover:scale-[1.03]"
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 hover:scale-[1.03]"
                       draggable={false}
                     />
                   </picture>
                 </Link>
               ) : (
-                <picture>
+                <picture className="absolute inset-0 block w-full h-full">
                   {img.mobile_image_url && <source media="(max-width: 768px)" srcSet={img.mobile_image_url} />}
                   <img 
                     src={img.image_url} 
                     alt="Banner" 
-                    className="w-full h-full object-cover transition-transform duration-700 hover:scale-[1.03]"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700"
                     draggable={false}
                   />
                 </picture>
