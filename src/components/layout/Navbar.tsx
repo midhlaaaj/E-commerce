@@ -221,7 +221,7 @@ export const Navbar = ({ transparent = false }: NavbarProps) => {
           />
           <div className="fixed inset-y-0 left-0 w-full xs:w-[320px] bg-[#1A1614] z-[70] lg:hidden animate-in slide-in-from-left duration-500 shadow-2xl flex flex-col text-white">
             {/* Header */}
-            <div className="p-8 flex items-center justify-between border-b border-white/5">
+            <div className="p-8 flex items-center justify-between">
               <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2">
                 <div className="w-7 h-7 bg-white flex items-center justify-center rounded-sm">
                   <span className="font-bold text-lg italic text-black">E</span>
@@ -240,74 +240,47 @@ export const Navbar = ({ transparent = false }: NavbarProps) => {
             <div className="flex-1 overflow-y-auto px-8 py-10 custom-scrollbar">
               {/* Main Collections */}
               <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 mb-6">Collections</p>
-                {['MEN', 'WOMEN', 'KIDS'].map((item, index) => (
+                {[{name: 'HOME', href: '/'}, {name: 'MEN', href: '/men'}, {name: 'WOMEN', href: '/women'}, {name: 'KIDS', href: '/kids'}].map((item, index) => (
                   <Link
-                    key={item}
-                    href={`/${item.toLowerCase()}`}
+                    key={item.name}
+                    href={item.href}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="group block py-4 animate-in slide-in-from-left duration-500"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-3xl font-light tracking-tighter uppercase group-hover:pl-4 transition-all duration-300">
-                        {item}
+                        {item.name}
                       </span>
                       <ChevronRight size={20} className="text-white/20 group-hover:text-white transition-colors" />
                     </div>
                   </Link>
                 ))}
-              </div>
-
-              <div className="h-px bg-white/5 my-10" />
-
-              {/* Account & Support */}
-              <div className="space-y-8 animate-in fade-in duration-700 delay-300">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 mb-6">Service & Support</p>
-                  <div className="grid gap-6">
-                    <Link 
-                      href="/profile" 
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center gap-4 text-sm font-medium text-white/70 hover:text-white transition-colors"
-                    >
-                      <UserIcon size={18} strokeWidth={1.5} />
-                      My Account
-                    </Link>
-                    <Link 
-                      href="/wishlist" 
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center gap-4 text-sm font-medium text-white/70 hover:text-white transition-colors"
-                    >
-                      <Heart size={18} strokeWidth={1.5} />
-                      Wishlist
-                    </Link>
-                    {isAdmin && (
-                      <Link 
-                        href="/admin" 
-                        onClick={() => setIsMobileMenuOpen(false)}
-                        className="flex items-center gap-4 text-sm font-medium text-[#D97706] hover:text-[#FBBF24] transition-colors"
-                      >
-                        <LayoutDashboard size={18} strokeWidth={1.5} />
-                        Admin Portal
-                      </Link>
-                    )}
+                
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    if (!user) {
+                      setIsLoginModalOpen(true);
+                    } else {
+                      router.push('/profile');
+                    }
+                  }}
+                  className="group block w-full py-4 animate-in slide-in-from-left duration-500 text-left"
+                  style={{ animationDelay: `400ms` }}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-3xl font-light tracking-tighter uppercase group-hover:pl-4 transition-all duration-300">
+                      MY ACCOUNT
+                    </span>
+                    <ChevronRight size={20} className="text-white/20 group-hover:text-white transition-colors" />
                   </div>
-                </div>
-
-                <div className="space-y-6">
-                   <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 mb-6">Connect</p>
-                   <div className="flex gap-6">
-                      {['Instagram', 'Twitter', 'Facebook'].map(social => (
-                        <a key={social} href="#" className="text-xs font-bold text-white/40 hover:text-white transition-colors uppercase tracking-widest">{social}</a>
-                      ))}
-                   </div>
-                </div>
+                </button>
               </div>
             </div>
 
             {/* Footer Actions */}
-            <div className="p-8 pt-0 border-t border-white/5 bg-[#1A1614]">
+            <div className="p-8 pt-0 bg-[#1A1614]">
               {user ? (
                 <button 
                   onClick={() => {
@@ -316,7 +289,7 @@ export const Navbar = ({ transparent = false }: NavbarProps) => {
                   }}
                   className="w-full py-5 mt-8 bg-white/5 hover:bg-red-500/10 text-xs font-black text-red-400 uppercase tracking-[0.3em] transition-all rounded-sm border border-red-500/20"
                 >
-                  Terminate Session
+                  SIGN OUT
                 </button>
               ) : (
                 <div className="grid grid-cols-2 gap-4 mt-8">
